@@ -1,0 +1,1253 @@
+---
+title: "Calculate management legacies, tree demography and climate data"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+<style type="text/css">
+pre {
+  font-size: 10px
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = T, warning = F,
+                      message = F)
+```
+
+```{r libraries}
+library(tidyverse)
+library(here)
+library(testthat)
+library(factoextra)
+library(RColorBrewer)
+library(ggh4x)
+library(sf)
+library(patchwork)
+library(janitor)
+```
+
+```{r read-data}
+tree23 <- read_csv(
+  file = here("01-data", "ifn", "tree23.csv")
+  )
+
+Pme2 <- read_csv(
+  here("01-data", "ifn", "Pme2_clean.csv")
+  )
+
+Pme3 <- read_csv(
+  here("01-data", "ifn", "Pme3_clean.csv")
+)
+```
+
+# Forest type definition
+
+```{r forest-type}
+map(tree23 |> select(Cla3, Subclase3),
+    ~levels(as.factor(.x)))
+
+# only pinus sylvestris trees (Psy)
+# I select those plots of pinus sylvestris and
+# where the % of pinus sylvestris is >= 50%
+Psy23 <- tree23 |> 
+  group_by(IDPC3) |> 
+  mutate(
+    # initial basal area
+    AB2m2ha.tot.plot = sum(AB2m2ha, na.rm = T),
+  ) |> 
+  group_by(IDPC3, sppcompa) |> 
+  mutate(
+    AB2m2ha.plot = sum(AB2m2ha, na.rm = T), 
+    AB2m2ha.rel.plot = AB2m2ha.plot * 100 / AB2m2ha.tot.plot
+  ) |> 
+  filter(
+    # Psy = 21; Ppa = 26; Pni = 25; Pha = 24
+    sppcompa == "021" & AB2m2ha.rel.plot >= 50
+  )
+
+nrow(Psy23) / nrow(tree23) # 14% Psy
+#  16% Ppa
+#  7% Pni
+#  9% Pha
+
+# all trees in plots where there is more than one Psy
+Psy23 <- Psy23 |> 
+  group_by(IDPC3) |> 
+  mutate(ntrees = length(IDPC3)) |> 
+  filter(ntrees > 1)
+```
+
+# Management legacy
+
+```{r legacy}
+# forest structure, sp richness, regeneration
+# join with information from Ceballos
+planted <- read_tsv(
+  here("01-data", "ifn", "Plotcode_RP.txt"),
+  col_types = cols(.default = "c",
+                   PLOTCODE = col_integer())
+)
+
+names(planted)
+
+dat <- planted |>
+  dplyr::select(PLOTCODE, Psy) |>
+  mutate(Psy = if_else(is.na(Psy), "A", Psy))
+
+test_that("NA is natural", {
+  expect_equal(sum(is.na(planted$Psy)) + sum(planted$Psy == "A", na.rm = T),
+               sum(dat$Psy == "A", na.rm = T))
+})
+
+Psy23_planted <- Psy23 |>
+  left_join(dat, by = c("Plotcode3" = "PLOTCODE"))
+
+# A = natural
+table(Psy23_planted$Psy, useNA = "always")
+
+Psy23_planted <- Psy23_planted |> 
+  mutate(
+    hdbh2 = h2 * 1000 / dbh2,
+    hdbh3 = h3 * 1000 / dbh3,
+    Psy = factor(Psy, levels = c("P", "A"), 
+                 labels = c("Planted", "Natural"))
+  )
+
+summary(Psy23_planted$Psy)
+
+# richness: I group by plot and species and 
+# select only the alive trees from ifn2
+table(tree23$state3)
+spp2 <- tree23 |>
+  filter(state3 == "V" | state3 == "MA" | state3 == "MP") |>
+  group_by(Plotcode2, sppcompa) |>
+  summarise(NoTrees2 = length(Plotcode2))
+
+names(spp2)
+
+sppriqueza2 <- spp2 |>
+  group_by(Plotcode2) |>
+  summarise(Riqueza2 = length(Plotcode2))
+
+# species richness ifn3
+table(tree23$state3)
+spp3 <- tree23 |>
+  filter(state3 == "V" | state3 == "R") |>
+  group_by(Plotcode3, sppcompa) |>
+  summarise(NoTrees3 = length(Plotcode3))
+
+names(spp3)
+
+sppriqueza3 <- spp3 |>
+  group_by(Plotcode3) |>
+  summarise(Riqueza3 = length(Plotcode3))
+
+Psy2 <- Psy23_planted |>
+  group_by(Plotcode2) |>
+  summarise(type2 = first(Psy),
+            IDPC3 = first(IDPC3),
+            ba_ha2 = sum(AB2m2ha, na.rm = TRUE),
+            dens2 = sum(dens2, na.rm = TRUE),
+            mdbh2 = mean(dbh2, na.rm = TRUE),
+            sddbh2 = sd(dbh2, na.rm = TRUE),
+            mh2 = mean(h2, na.rm = TRUE),
+            sdh2 = sd(h2, na.rm = TRUE),
+            mhdbh2 = mean(hdbh2, na.rm = TRUE),
+            mqH2 = mean(Calidad2, na.rm = TRUE),
+            cvdbh2 = sddbh2 / mdbh2,
+            cvh2 = sdh2 / mh2) |>
+  dplyr::select(!c(sddbh2, sdh2))
+
+Psy3 <- Psy23_planted |>
+  group_by(Plotcode3) |>
+  summarise(type3 = first(Psy),
+            IDPC3 = first(IDPC3),
+            ba_ha3 = sum(AB3m2ha, na.rm = TRUE),
+            dens3 = sum(dens3, na.rm = TRUE),
+            mdbh3 = mean(dbh3, na.rm = TRUE),
+            sddbh3 = sd(dbh3, na.rm = TRUE),
+            mh3 = mean(h3, na.rm = TRUE),
+            sdh3 = sd(h3, na.rm = TRUE),
+            mhdbh3 = mean(hdbh3, na.rm = TRUE),
+            mqH3 = mean(Calidad3, na.rm = TRUE),
+            cvdbh3 = sddbh3 / mdbh3,
+            cvh3 = sdh3 / mh3) |>
+  dplyr::select(!c(sddbh3, sdh3))
+
+map(Psy2, ~sum(is.na(.)))
+map(Psy3, ~sum(is.na(.)))
+
+Psy2 <- Psy2 |> 
+  mutate(
+    type2 = recode(type2, Planted = "1", Natural = "0")
+  )
+summary(Psy2$type2)
+
+Psy3 <- Psy3 |> 
+  mutate(
+    type3 = recode(type3, Planted = "1", Natural = "0")
+  )
+summary(Psy3$type3)
+
+Psy2 <- Psy2 |>
+  left_join(sppriqueza2, by = "Plotcode2")
+glimpse(Psy2)
+
+Psy3 <- Psy3 |>
+  left_join(sppriqueza3, by = "Plotcode3")
+glimpse(Psy3)
+
+# all species and size classes
+pPme2 <- Pme2 |> 
+  group_by(Plotcode2) |> 
+  summarise(Pmedens2 = sum(Pmedens_ha2, na.rm = T)) 
+
+pPme3 <- Pme3 |>
+  group_by(Plotcode3) |> 
+  summarise(Pmedens3 = sum(Pmedens_ha3, na.rm = T)) 
+
+Psy2 <- Psy2 |> 
+  left_join(pPme2, by = "Plotcode2")
+
+Psy3 <- Psy3 |>
+  left_join(pPme3, by = "Plotcode3")
+
+summary(Psy2$Pmedens2)
+summary(Psy3$Pmedens3)
+
+Psy2 <- Psy2 |> 
+  mutate(Pmedens2 = replace_na(Pmedens2, 0))
+
+Psy3 <- Psy3 |> 
+  mutate(Pmedens3 = replace_na(Pmedens3, 0))
+
+summary(Psy2$Pmedens2)
+summary(Psy3$Pmedens3)
+
+Psy23_final <- full_join(Psy2, Psy3, by = "IDPC3")
+
+names(Psy23_final)
+
+nrow(Psy23_final)
+
+test_that("sum is number of NA", {
+  expect_equal(sum(is.na(Psy23_final$Plotcode2)), 1)
+  })
+
+test_that("type2 == type3", {
+  expect_equal(identical(Psy23_final[["type2"]],
+                         Psy23_final[["type3"]]), TRUE)
+})
+
+Psy23_final <- Psy23_final |> 
+  drop_na(Plotcode2)
+
+test_that("Plotcode2 == Plotcode3", {
+  expect_equal(identical(Psy23_final[["Plotcode2"]],
+                         Psy23_final[["Plotcode3"]]), TRUE)
+})
+
+map(Psy23_final, ~sum(is.na(.)))
+
+nrow(Psy23_final)
+Psy23_final <- Psy23_final |>
+  drop_na()
+nrow(Psy23_final)
+table(Psy23_final$type2)
+
+# long format
+Psy23_final_ba_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "ba_ha2", "ba_ha3"
+    ),
+    names_to = "ba_ifn",
+    values_to = "basal_area"
+  ) |> 
+  dplyr::select(
+    IDPC3, ba_ifn, basal_area, type2
+    )
+Psy23_final_dens_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "dens2", "dens3"
+    ),
+    names_to = "dens_ifn",
+    values_to = "density"
+  ) |> 
+  dplyr::select(
+    dens_ifn, density
+    )
+Psy23_final_mdbh_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "mdbh2", "mdbh3"
+    ),
+    names_to = "mdbh_ifn",
+    values_to = "dbh"
+  ) |> 
+  dplyr::select(
+    mdbh_ifn, dbh
+    )
+Psy23_final_mh_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "mh2", "mh3"
+    ),
+    names_to = "mh_ifn",
+    values_to = "height"
+  ) |> 
+  dplyr::select(
+    mh_ifn, height
+  )
+Psy23_final_mhdbh_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "mhdbh2", "mhdbh3"
+    ),
+    names_to = "mhdbh_ifn",
+    values_to = "height_dbh"
+  ) |> 
+  dplyr::select(
+    mhdbh_ifn, height_dbh
+  )
+Psy23_final_cvdbh_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "cvdbh2", "cvdbh3"
+    ),
+    names_to = "cvdbh_ifn",
+    values_to = "cv_dbh"
+  ) |> 
+  dplyr::select(
+    cvdbh_ifn, cv_dbh
+  )
+Psy23_final_cvh_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "cvh2", "cvh3"
+    ),
+    names_to = "cvh_ifn",
+    values_to = "cv_height"
+  ) |> 
+  dplyr::select(
+    cvh_ifn, cv_height
+  )
+Psy23_final_Pmedens_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "Pmedens2", "Pmedens3"
+    ),
+    names_to = "Pmedens_ifn",
+    values_to = "saplings"
+  ) |> 
+  dplyr::select(
+    Pmedens_ifn, saplings
+  )
+Psy23_final_Riqueza_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "Riqueza2", "Riqueza3"
+    ),
+    names_to = "Riqueza_ifn",
+    values_to = "sp_richness"
+  ) |> 
+  dplyr::select(
+    Riqueza_ifn, sp_richness
+  )
+Psy23_final_mqH_long <- Psy23_final |>
+  filter(mqH3 <= 6 ) |> 
+  pivot_longer(
+    cols = c(
+      "mqH2", "mqH3"
+    ),
+    names_to = "mqH_ifn",
+    values_to = "tree_vigour"
+  ) |> 
+  dplyr::select(
+    mqH_ifn, tree_vigour
+  )
+
+Psy23_final_long <- bind_cols(
+  Psy23_final_ba_long,
+  Psy23_final_dens_long,
+  Psy23_final_mdbh_long,
+  Psy23_final_mh_long,
+  Psy23_final_mhdbh_long,
+  Psy23_final_cvdbh_long,
+  Psy23_final_cvh_long,
+  Psy23_final_Pmedens_long,
+  Psy23_final_Riqueza_long,
+  Psy23_final_mqH_long
+)
+
+# for boxplot cluster x origin
+Psy23_final_long_str <- Psy23_final_long
+
+test_that("Plotcode2 == Plotcode3", {
+  expect_equal(unname(map_dbl(Psy23_final_long, ~sum(is.na(.)))), rep(0, length(names(Psy23_final_long))))
+               })
+```
+
+# PCA and clustering: only planted forests
+
+```{r cluster}
+names(Psy23_final_long)
+
+# type = 1 is planted
+Psy23_final_long <- Psy23_final_long |> 
+  mutate(
+    type2 = str_replace(type2, "1", "planted"),
+    type2 = str_replace(type2, "0", "natural"),
+  )
+
+# ja: clusters para plantado y natural por serapado
+table(Psy23_final_long$type2, useNA = "always")
+
+nrow(Psy23_final_long |> 
+       distinct(IDPC3))
+
+Psy23_final_long_num <- Psy23_final_long |>
+  dplyr::select(
+    !c(ends_with("ifn"), IDPC3, type2)
+    )
+glimpse(Psy23_final_long_num)
+
+pca_Psy <- prcomp(Psy23_final_long_num, scale = TRUE)
+
+PCAPsy <- fviz_pca_biplot(pca_Psy, label = "var", 
+                          col.ind = "grey",
+                          col.var = "black",
+                          title = "",
+                          labelsize = 3,
+                          habillage = Psy23_final_long$type2)
+
+# https://uc-r.github.io/kmeans_clustering
+Psy23_final_long_num_sc <- scale(Psy23_final_long_num)
+
+set.seed(123)
+k3 <- kmeans(Psy23_final_long_num_sc, centers = 2, nstart = 25)
+
+myColors <- brewer.pal(4, "Paired")[c(2, 4)]
+
+cluster_ifn23 <- fviz_cluster(
+  k3, data = Psy23_final_long_num_sc,
+  geom = "point"
+  ) + 
+  ggtitle(label = '') +
+  scale_color_manual(values = myColors) +
+  scale_fill_manual(values = myColors)
+cluster_ifn23
+
+# # determining number of clusters
+# set.seed(123)
+# fviz_nbclust(Psy23_final_long_num_sc, kmeans, method = "wss")
+# 
+# # quality of the cluster
+# set.seed(123)
+# fviz_nbclust(Psy23_final_long_num_sc, kmeans, k.max = 6,
+#              method = "silhouette") +
+#   ggtitle(label = "")
+
+# add the cluster number to the original data
+Psy23_final_long <- Psy23_final_long |>
+  mutate(
+    k3 = k3$cluster
+  )
+table(Psy23_final_long$k3)
+names(Psy23_final_long)
+
+# for the contingency table
+Psy23_final_long_k <- Psy23_final_long
+
+allPsy23 <- Psy23_final_long |>
+   pivot_longer(
+    cols = c(
+      basal_area,
+      density, dbh, height,
+      height_dbh, cv_dbh, cv_height,
+      saplings, sp_richness,
+      tree_vigour
+    ),
+    names_to = "structure",
+    values_to = "str_value"
+  ) |> 
+  dplyr::select(
+    !ends_with("ifn")
+  )
+
+gg_str <- function(data, k){
+  ggplot(data, aes(x = structure, y = str_value,
+                   fill = as.character(.data[[k]]))) +
+    geom_boxplot(outlier.size = 0.2, width = 0.5) +
+    labs(x = "", title = "", y = "")  +
+    scale_fill_manual(name = "cluster", values = myColors) +
+    facet_wrap(~structure, scale = "free",
+               strip.position = "bottom") +
+    ylab("Structure") +
+    theme(
+      axis.text = element_text(colour = "grey50", size = 10),
+      axis.title = element_text(colour = "grey50", size = 12),
+      panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+      panel.background = element_blank(),
+      legend.key = element_blank(),
+      strip.text.x = element_blank(),
+      axis.ticks = element_blank()
+    )
+}
+
+plot_str <- gg_str(data = allPsy23,
+                   k = "k3")
+plot_str
+
+plot_str_plan_nat <- gg_str(data = allPsy23,
+                   k = "type2") +
+  scale_color_manual(values = c("#F8766D", "#619CFF")) +
+  scale_fill_manual(values = c("#F8766D", "#619CFF"))
+plot_str_plan_nat
+
+ggsave( 
+  plot = plot_str_plan_nat,
+  here("03-results", "others", "ifn23_str_plan_nat.png"),
+  width = 10, height = 8
+)
+
+plot_PCA <- PCAPsy + theme(
+  legend.title = element_blank(),
+  text = element_text(colour = "grey50", size = 12),
+  panel.grid.minor = element_blank(),
+  axis.text = element_text(colour = "grey50", size = 10),
+  axis.title = element_text(colour = "grey50", size = 12),
+  axis.ticks = element_blank()
+)
+plot_PCA
+
+plot_cluster <- cluster_ifn23 +
+  theme(
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    axis.ticks = element_blank()
+  )
+plot_cluster
+```
+
+# Demography (2nd & 3rd forest inventory (ifn23)
+
+```{r demography}
+names(Psy23_planted)
+
+# for the dbh of dead treees
+Psy23_planted_m <- Psy23_planted
+
+# I obtain the initial basal area and
+# the missing dead trees for each plot
+dem23_ifn2 <- Psy23_planted |>  
+  group_by(IDPC3) |>
+  summarise(
+    ba_ifn2 = sum(AB2m2ha, na.rm = TRUE),
+    Mortality_ausente = sum(AB2m2ha_ausente, na.rm = TRUE)
+  ) |> 
+  select(IDPC3, ba_ifn2, Mortality_ausente)
+
+table(Psy23_planted$state3)
+
+Psy23_planted <- Psy23_planted |> 
+  mutate(AB32ha_all = AB3m2ha - AB2m2ha) |> 
+  # delete no comparable & missing dead trees 2-3
+  filter(!c(
+    state3 == "MA-nc" | state3 == "MP-nc" | state3 == "V-nc" 
+    | state3 == "MA"
+    ))
+
+table(Psy23_planted$state3)
+
+# reclutamiento32_5 recruited trees in
+# the subplot of 5 m
+dem23 <- Psy23_planted |>  
+  group_by(IDPC3) |>
+  summarise(
+    type2 = first(Psy),
+    BAc = sum(AB32ha_all, na.rm = TRUE),
+    Ingrowth = sum(reclutamiento32_5, na.rm = TRUE),
+    Growth = sum(AB32ha, na.rm = TRUE),
+    Mortality = sum(AB2m2ha_muertosc, na.rm = TRUE)
+    ) |>
+  left_join(dem23_ifn2, by = "IDPC3") |> 
+  mutate(
+    BAc = BAc / ba_ifn2,
+    Ingrowth = Ingrowth / ba_ifn2,
+    Growth = Growth / ba_ifn2,
+    Mortality_nd = Mortality,
+    Mortality = Mortality / ba_ifn2,
+    Mortality_ausente = Mortality_ausente / ba_ifn2,
+  )
+
+# to get census interval
+plot23 <- read_csv(
+  here("01-data", "ifn", "plot23.csv"),
+  col_types = cols(
+    MEROSIVA2 = col_character(),
+    MEROSIVA3 = col_character(),  
+    FCCTOT = col_character(),
+    MEROSIVA4 = col_character(),  
+    MejVue13 = col_character(),
+    CortaReg3 = col_character(),  
+    MejVue23 = col_character(),
+    Tratasuelo3 = col_character(),
+    MejSue13 = col_character(),
+    MejSue23 = col_character(),   
+    Nivel33 = col_character(),
+    Nivel23 = col_character()
+  )
+)
+
+plot_dem23 <- plot23 |> 
+  dplyr::select(IDPC3, Plotcode3, year32, Cut32) |> 
+  right_join(dem23, by = "IDPC3") |> 
+  mutate(
+    BAc23 = BAc / year32,
+    Ingrowth23 = Ingrowth / year32,
+    Growth23 = Growth / year32,
+    Mortality23 = Mortality / year32,
+    Mortality23_nd = Mortality_nd / year32,
+    Mortality_ausente23 = Mortality_ausente / year32,
+  ) |> 
+  dplyr::select(
+    !c(BAc, Ingrowth, Growth, Mortality, Mortality_nd, Mortality_ausente)
+  )
+
+names(plot_dem23)
+
+Psy_dem23 <- plot_dem23
+
+nrow(Psy_dem23)
+
+# planted ifn 23
+nrow(Psy23_final)
+names(Psy23_final)
+
+table(Psy_dem23$type2, useNA = "always")
+# keep the cluster of ifn2
+Psy23_final_long <- Psy23_final_long |> 
+  distinct(IDPC3, .keep_all = T)
+
+# there are some plots with NA in the planted and natural cluster
+# because they only contain one LIVE tree. I deleted them
+# kk <- Psy23_planted |>
+#   filter(
+#   IDPC3 == "10913A1" | IDPC3 == "10634A1"
+# )
+
+# demography for natural and planted, all together
+Psy_dem23 <- Psy_dem23 |>
+  left_join(Psy23_final_long,
+            by = "IDPC3")
+
+nrow(Psy_dem23)
+
+map(Psy_dem23, ~sum(is.na(.)))
+
+names(Psy_dem23)
+
+Psy_dem23_sel <- Psy_dem23 |>
+  dplyr::select(
+    IDPC3,
+    Ingrowth23,
+    Growth23, 
+    Mortality23, 
+    Mortality23_nd,
+    Mortality_ausente23,
+    BAc23,
+    ba_ifn2,
+    k3,
+    type2.x,
+    Cut32
+  )
+
+Psy_dem23_sel <- Psy_dem23_sel |>
+  filter(!is.na(k3))
+
+Psy_dem23_sel_lon <- Psy_dem23_sel |>
+  pivot_longer(
+    cols = c(
+      Ingrowth23, 
+      Growth23, 
+      Mortality23,
+      BAc23
+    ),
+    names_to = "demography",
+    values_to = "dem_value"
+  )
+
+myColors <- brewer.pal(4, "Paired")[c(2, 4)]
+
+col_strips <- strip_themed(
+  # http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
+  background_x = elem_list_rect(fill = c("#F8766D", "#619CFF")),
+  by_layer_x = FALSE,
+  text_x = elem_list_text(face = "bold")
+)
+
+gg_dem <- function(k){
+  ggplot(Psy_dem23_sel_lon, aes(x = demography, y = dem_value,
+                                fill = as.character(.data[[k]]))) +
+    geom_boxplot(outlier.shape = NA) +
+    labs(x = "", title = "", y = "Demography")  +
+    scale_color_manual(values = myColors) +
+    scale_fill_manual(values = myColors) +
+    facet_wrap2(
+      ~type2.x, strip = col_strips
+      ) +
+    coord_cartesian(ylim = c(0.0, 0.25)) +
+    theme(
+      legend.title = element_blank(),
+      axis.title.x = element_blank(),
+      axis.text = element_text(colour = "grey50", size = 10),
+      axis.title = element_text(colour = "grey50", size = 12),
+      panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+      panel.background = element_blank(),
+      legend.key = element_blank()
+    )
+}
+
+plot_dem <- gg_dem(k = "k3")
+plot_dem
+
+ggsave( 
+  plot = plot_dem,
+  here("03-results", "others", "ifn23_demo.png"),
+  width = 10, height = 8
+)
+
+summary(Psy_dem23_sel_lon |> 
+  filter(type2.x == "Planted" & demography == "Ingrowth23") |> 
+    select(dem_value))
+summary(Psy_dem23_sel_lon |> 
+  filter(type2.x == "Natural" & demography == "Ingrowth23") |> 
+    select(dem_value))
+```
+
+# Legacies map
+
+```{r map-legacies}
+cPsy <- left_join(Psy_dem23_sel, plot23 |> 
+                    select(IDPC3, Plotcode3, CX_teo, CY_teo), by = "IDPC3")
+
+table(cPsy$k3, useNA = "always")
+
+map_loc <- map_data("world", region = c("Portugal", "Spain", "France",
+                                        "Andorra")) |> 
+  ggplot(aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), 
+               fill = "white", 
+               color = "grey") +
+  coord_fixed(xlim = c(-11, 5),  
+              ylim = c(35, 45), 
+              ratio = 1.3) +
+  xlab("Longitude") +
+  ylab("Latitude") + 
+  theme(legend.title = element_text(colour = "black", face = "bold", size = 12),
+        legend.position = c(0.9, 0.2),
+        legend.text = element_text(size = 10),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),  
+        axis.text.x = element_text(colour = "grey50", size = 8),
+        axis.text.y = element_text(colour = "grey50", size = 8),
+        axis.ticks = element_blank(),
+        panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+        axis.line = element_blank(),
+        panel.background = element_blank()) 
+
+cPsy_sf <- st_as_sf(x = cPsy, 
+                    coords = c("CX_teo", "CY_teo"),
+                    crs = "+proj=utm +zone=30 +ellps=intl +units=m +no_defs")
+st_crs(cPsy_sf)
+
+ggplot() + 
+  geom_sf(data = cPsy_sf)
+
+cPsy_sf_map <- st_transform(
+  cPsy_sf,
+  "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+)
+
+st_crs(cPsy_sf_map)
+
+cPsy_sp_tb <- cPsy_sf_map |>
+  ungroup() |> 
+  mutate(CX = unlist(map(cPsy_sf_map$geometry, 1)),
+         CY = unlist(map(cPsy_sf_map$geometry, 2))) |> 
+  as_tibble() |> 
+  dplyr::select(!geometry)
+
+map_plots <- function(col.var){
+  map_loc + 
+    geom_point(data = cPsy_sp_tb,
+               aes(CX, CY, color = as.factor(.data[[col.var]]),
+                   shape = as.factor(.data[[col.var]])),
+               size = .5) + 
+    scale_color_manual(values = myColors, name = "cluster") +
+    xlab("") +
+    ylab("") + 
+    guides(colour = guide_legend(override.aes = list(size = 5))) +
+    theme(plot.margin = margin(0, 0, 0, 0),
+          legend.title = element_text(size = 9),
+          legend.text = element_text(size = 9),
+          legend.key = element_blank(),
+          legend.justification = "left",
+          legend.background = element_rect(fill = "white", colour = NA),
+          axis.title = element_blank(),
+          axis.text.x = element_text(colour = "grey50", size = 7),
+          axis.text.y = element_text(colour = "grey50", size = 7),
+          panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+          axis.line = element_blank(),
+          panel.background = element_blank())
+}
+
+map_cluster <- map_plots(col.var = "k3") +
+  scale_shape_manual(values = c(19, 17), name = "cluster")
+map_cluster
+  
+map_planted <- map_plots(col.var = "type2.x") +
+  scale_color_manual(
+    limits = c("Natural", "Planted"),
+    labels = c("natural", "planted"),
+    values = c("#F8766D", "#00BFC4"),
+    name = "cluster"
+    ) +
+  scale_shape_manual(
+    limits = c("Natural", "Planted"),
+    labels = c("natural", "planted"),
+    values = c(19, 17),
+    name = "cluster"
+    )
+map_planted
+
+# save paper plots --------------------------------------------------------
+plot_PCA + theme(legend.position = "none") + map_planted +
+  plot_annotation(tag_levels = "a")
+
+ggsave(
+  here("03-results", "si_figures", "s1_psy_plan_nat.png"),
+  width = 16, height = 8
+)
+
+(plot_cluster + plot_str) /
+  (map_cluster + plot_spacer()) +
+  plot_annotation(tag_levels = "a")
+
+ggsave(
+  here("03-results", "si_figures", "s2_psy_cluster.png"),
+  width = 18, height = 10
+)
+```
+
+# Merge with climate data 
+
+```{r climate-data}
+clima <- read_csv(here("01-data", "climate", "completeclimate.csv")) |> 
+  dplyr::select(!c(...1, Cut, yearini, yearfin, IFNcode, plotcode))
+
+# remove duplicated plots
+clima <- clima |> 
+  distinct(IDPC, .keep_all = T)
+nrow(clima)
+
+dem_clim <- left_join(
+  Psy_dem23_sel, clima, by = c("IDPC3" = "IDPC")
+  )
+nrow(dem_clim)
+
+map(dem_clim, ~sum(is.na(.)))
+
+table(dem_clim$k3)
+
+dem_clim_final <- dem_clim |> 
+  dplyr::select(
+    IDPC3, CX, CY,
+    k3, type2.x, Cut32, everything()
+  )
+
+glimpse(dem_clim_final)
+
+map(dem_clim_final, ~sum(is.na(.)))
+
+# delete 3C plot types
+dem_clim_final <- dem_clim_final |> 
+  drop_na(
+    CX, CY, 
+    sf_nfi, sgdd_nfi, 
+    PPplot, PETplot,
+    WAIplot, speimean, speimin
+    )
+
+map(dem_clim_final, ~sum(is.na(.)))
+
+write_csv(dem_clim_final, here("01-data", "legacies", "dem_clim_ps_cut.csv"))
+```
+
+# Legacy transitions
+
+```{r transitions}
+dem_clim_final |> 
+  tabyl(k3, type2.x) |> 
+  adorn_percentages("row") |>
+  adorn_pct_formatting(digits = 2) |>
+  adorn_ns()
+
+# 3C included
+k_ifn2 <- Psy23_final_long_k |>
+  dplyr::select(IDPC3, ba_ifn, k3) |> 
+  filter(ba_ifn == "ba_ha2") |> 
+  rename(k3_ifn2 = k3) |> 
+  dplyr::select(!ba_ifn)
+
+k_ifn3 <- Psy23_final_long_k |>
+  dplyr::select(IDPC3, ba_ifn, k3) |> 
+  filter(ba_ifn == "ba_ha3") |> 
+  rename(k3_ifn3 = k3) |> 
+  dplyr::select(!ba_ifn)
+
+k_ifn23 <- inner_join(k_ifn2, k_ifn3, by = "IDPC3")
+
+cont_table_abs <- Psy23_final_long_k |> 
+  tabyl(k3, ba_ifn)
+cont_table_abs
+
+write_csv(cont_table_abs, here("01-data", "legacies", "cont_table_abs.csv"))
+
+cont_table_chan <- k_ifn23 |> 
+  tabyl(k3_ifn2, k3_ifn3)
+cont_table_chan
+
+write_csv(cont_table_chan, here("01-data", "legacies", "cont_table_chan.csv"))
+```
+
+# Boxplot cluster x sp origen 
+
+```{r cluster-origin}
+dem_clim <- read_csv(
+  here("01-data", "legacies", "dem_clim_ps_cut.csv")
+)
+
+table(dem_clim$k3)
+table(dem_clim$type2.x)
+summary(dem_clim$Mortality23)
+
+dem_clim <- dem_clim |> 
+  unite("k_type", k3:type2.x) |> 
+  mutate(
+    mort_real = if_else(
+      Cut32 == 0, Mortality_ausente23 + Mortality23, 
+      Mortality23
+    )
+  )
+
+table(dem_clim$k_type)
+
+myColors <- brewer.pal(4, "Paired")
+
+# growth
+gg_growth_clorig <- dem_clim |> 
+  mutate(
+    k_type = recode_factor(
+      k_type, 
+      "1_Natural" = "C1 Natural",
+      "1_Planted" = "C1 Planted",
+      "2_Natural" = "C2 Natural",
+      "2_Planted" = "C2 Planted",
+      ),
+    k_type = fct_relevel(
+      k_type, c("C1 Natural", 
+              "C1 Planted",
+              "C2 Natural",
+              "C2 Planted")
+    ),
+    ) |>
+  ggplot(aes(y = Growth23, x = k_type, fill = k_type)) +
+  geom_boxplot(outlier.size = 0.2, width = 0.5) +
+  labs(x = "", title = "", y = "")  +
+  scale_fill_manual(name = "cluster", values = myColors) +
+  ylab(expression(paste("Growth (%", ~ha^-1~year^-1,")"))) +
+  # coord_flip() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+# structure
+dem_clim_str23 <- left_join(
+  dem_clim, Psy23_final_long_str, by = "IDPC3"
+  )
+
+test_that("nrow is correct", {
+  expect_equal(nrow(dem_clim) * 2,
+               nrow(dem_clim_str23))
+})
+
+dem_clim_str23_l <- dem_clim_str23 |>
+  pivot_longer(
+    cols = c(
+      basal_area,
+      density, dbh, height,
+      height_dbh, cv_dbh, cv_height,
+      saplings, sp_richness,
+      tree_vigour
+    ),
+    names_to = "structure",
+    values_to = "str_value"
+  ) |> 
+  dplyr::select(
+    !ends_with("ifn")
+  )
+
+gg_str_clorig <- dem_clim_str23_l |> 
+  mutate(
+    k_type = recode_factor(
+      k_type, 
+      "1_Natural" = "C1 Natural",
+      "1_Planted" = "C1 Planted",
+      "2_Natural" = "C2 Natural",
+      "2_Planted" = "C2 Planted",
+    )
+    ) |> 
+  ggplot(aes(x = structure, y = str_value,
+             fill = k_type)) +
+  geom_boxplot(outlier.size = 0.2, width = 0.5) +
+  labs(x = "", title = "", y = "")  +
+  scale_fill_manual(name = "", values = myColors) +
+  facet_wrap(~structure, scale = "free",
+             strip.position = "bottom") +
+  ylab("Structure") +
+  theme(
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+# dbh of plots with dead trees
+gg_dbh_mort <- dem_clim_str23_l |> 
+  filter(mort_real > 0 & 
+           structure == "dbh") |> 
+  mutate(
+    k_type = recode_factor(
+      k_type, 
+      "1_Natural" = "C1 Natural",
+      "1_Planted" = "C1 Planted",
+      "2_Natural" = "C2 Natural",
+      "2_Planted" = "C2 Planted",
+    )
+  ) |> 
+  ggplot(aes(x = structure, y = str_value,
+             fill = k_type)) +
+  geom_boxplot(outlier.size = 0.2, width = 0.5) +
+  labs(x = "", title = "", y = "")  +
+  scale_fill_manual(name = "", values = myColors) +
+  facet_wrap(~structure, scale = "free",
+             strip.position = "bottom") +
+  ylab("d.b.h. (mm)") +
+  theme(
+    axis.text.y = element_text(colour = "grey50", size = 10),
+    axis.text.x = element_blank(),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks = element_blank()
+  )
+gg_dbh_mort
+
+# basal area of plots with dead trees
+gg_ba_mort <- dem_clim_str23_l |> 
+  filter(mort_real > 0 & 
+           structure == "basal_area") |> 
+  mutate(
+    k_type = recode_factor(
+      k_type, 
+      "1_Natural" = "C1 Natural",
+      "1_Planted" = "C1 Planted",
+      "2_Natural" = "C2 Natural",
+      "2_Planted" = "C2 Planted",
+    )
+  ) |> 
+  ggplot(aes(x = structure, y = str_value,
+             fill = k_type)) +
+  geom_boxplot(outlier.size = 0.2, width = 0.5) +
+  labs(x = "", title = "", y = "")  +
+  scale_fill_manual(name = "", values = myColors) +
+  facet_wrap(~structure, scale = "free",
+             strip.position = "bottom") +
+  ylab(bquote("Basal area"~(m^2~ha^-1))) +
+  theme(
+    axis.text.y = element_text(colour = "grey50", size = 10),
+    axis.text.x = element_blank(),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks = element_blank()
+  )
+gg_ba_mort
+
+# tree level
+psy_m <- Psy23_planted_m |> 
+  select(
+    IDPC3, AB2m2ha_muertosc,
+    AB2m2ha_ausente, AB2m2ha_presente,
+    dbh2, AB2m2ha
+  )
+
+psy_m_plots <- left_join(
+  psy_m, dem_clim, by = "IDPC3"
+  ) |>
+  filter(
+    (Cut32 == 0 &
+    AB2m2ha_muertosc > 0) |
+      (Cut32 == 1 &
+         AB2m2ha_presente > 0) 
+    )
+
+kk <- psy_m_plots |> 
+  filter(Cut32 == 1) |> 
+  select(AB2m2ha_ausente)
+
+test_that("there are no muerto_ausente when the plot was cut", {
+  expect_equal(sum(kk$AB2m2ha_ausente, na.rm = T),
+               0)
+})
+
+gg_mort_dbh_ind <- psy_m_plots |> 
+  mutate(
+    k_type = recode_factor(
+      k_type, 
+      "1_Natural" = "C1 Natural",
+      "1_Planted" = "C1 Planted",
+      "2_Natural" = "C2 Natural",
+      "2_Planted" = "C2 Planted",
+    ),
+    k_type = fct_relevel(
+      k_type, c("C1 Natural", 
+                "C1 Planted",
+                "C2 Natural",
+                "C2 Planted")
+    ),
+  ) |>
+  ggplot(aes(y = dbh2, x = k_type, fill = k_type)) +
+  geom_boxplot(outlier.size = 0.2, width = 0.5) +
+  labs(x = "", title = "", y = "")  +
+  scale_fill_manual(name = "cluster", values = myColors) +
+  ylab("d.b.h. (mm)") +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks = element_blank()
+  )
+gg_mort_dbh_ind
+
+gg_mort_ba_ind <- psy_m_plots |> 
+  mutate(
+    k_type = recode_factor(
+      k_type, 
+      "1_Natural" = "C1 Natural",
+      "1_Planted" = "C1 Planted",
+      "2_Natural" = "C2 Natural",
+      "2_Planted" = "C2 Planted",
+    ),
+    k_type = fct_relevel(
+      k_type, c("C1 Natural", 
+                "C1 Planted",
+                "C2 Natural",
+                "C2 Planted")
+    ),
+  ) |>
+  ggplot(aes(y = AB2m2ha, x = k_type, fill = k_type)) +
+  geom_boxplot(outlier.size = 0.2, width = 0.5) +
+  labs(x = "", title = "", y = "")  +
+  scale_fill_manual(name = "cluster", values = myColors) +
+  ylab(bquote("Basal area"~(m^2~ha^-1))) +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    panel.grid.major = element_line(colour = "grey90", size = 0.5), 
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks = element_blank()
+  )
+gg_mort_ba_ind
+
+ggsave(
+  plot = gg_growth_clorig,
+  here("03-results", "si_figures",
+       "s7_growth.png"),
+  width = 6, height = 4
+)
+
+ggsave(
+  plot = gg_str_clorig,
+  here("03-results", "si_figures",
+       "s8_str_clorig.png"),
+  width = 14, height = 6
+)
+
+ggsave(
+  plot = gg_dbh_mort,
+  here("03-results", "si_figures",
+       "s9_mort_dbh.png"),
+  width = 6, height = 4
+)
+
+ggsave(
+  plot = gg_ba_mort,
+  here("03-results", "si_figures",
+       "s10_mort_ba.png"),
+  width = 6, height = 4
+)
+
+ggsave(
+  plot = gg_mort_dbh_ind,
+  here("03-results", "si_figures",
+       "s11_mort_dbh_ind.png"),
+  width = 6, height = 4
+)
+
+ggsave(
+  plot = gg_mort_ba_ind,
+  here("03-results", "si_figures",
+       "s12_mort_ba_ind.png"),
+  width = 6, height = 4
+)
+```

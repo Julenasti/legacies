@@ -1,0 +1,11 @@
+---
+title: "Untitled"
+author: "Julen"
+date: '2022-07-06'
+output: html_document
+---
+
+1.	Más mortalidad en plantado. Al plantar aumentas la exposure y aumenta el lack of adaptability
+2.	Con el tipo estructural, cambiamos la sensitivity. C1 bosques jóvenes y c2 bosques más maduros
+3.	Cuando predecimos alterando el cluster (siguiendo las transiciones  observadas) el natural disminuye y el plantado aumenta
+menos saplings en plantado y c2
