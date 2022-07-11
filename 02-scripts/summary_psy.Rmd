@@ -5,6 +5,7 @@ output:
 bibliography:
 - references.bib
 - packages.bib
+- packages2.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -15,20 +16,14 @@ knitr::opts_chunk$set(echo = F, warning = F, message = F)
 
 ## Spanish forest inventory and climate data
 
-```{r}
+```{r data-summary}
 
 library(tidyverse)
 library(here)
 
 tree23 <- read_csv(
-  file = "C:\\Users\\julen\\OneDrive - Universidad de Alcala\\raw_Compartir\\tree23.csv",
-  col_types = cols(
-    Importancia3 = col_character(),
-    Elemento3 = col_character(),
-    Forma3 = col_character(),
-    Paramesp2 = col_character()
+  file = here("01-data", "ifn", "tree23.csv")
   )
-)
 
 # map(tree23 %>% select(Cla3, Subclase3),
 #     ~levels(as.factor(.x)))
@@ -48,7 +43,7 @@ Psy23 <- tree23 %>%
   )
 
 planted <- read_tsv(
-  here("1raw", "Plotcode_RP.txt"),
+  here("01-data", "ifn", "Plotcode_RP.txt"),
   col_types = cols(.default = "c",
                    PLOTCODE = col_integer())
 )
@@ -66,32 +61,55 @@ We selected all trees in permanent stands in the Third Spanish Forest Inventory 
 
 We obtained forest structure variables using information from the Second and Third Spanish Forest Inventory censuses because we wanted to have the broadest possible structural representation of the analysed stands. We calculated stand density (No. trees ha^-1^), stand basal area (m^2^ ha^-1^), mean d.b.h. (mm), mean height (m), coefficient of variation of d.b.h. (adimensional), coefficient of variation of height (adimensional), the ratio height:d.b.h (adimensional), species richness (No. of species), recruitment (No. trees ha^-1^) and tree vigour [categorical variable ranging from one, meaning healthy tree, to six, meaning dead standing but non-rotten tree, calculated as the mean value from the tree level quality index see @moreno-fernández2019] <!--#  meaning (1) healthy, vigorous and dominant tree, (2) healthy and non-dominated tree with some formation defects; (3) dominated tree with poor health;(4) diseased, weak and old tree with many formation defects; 5) severely diseased tree; and (6) dead standing but non-rotten tree. -->. Using all forest structure variables we made clusters considering all planted and natural stands. Then, we obtained a variable that related the natural or planted origin of the stand and the cluster to which that stand belonged (hereafter management legacy, see Fig. S1 & S2).
 
-![Figure S1.](images/s1_psy_plan_nat.png)
-
-![Figure S2.](images/s2_psy_cluster2.png)
-
 The climate data was obtained from... <!--# paloma-->
 
 ## Analyses
 
-We fitted hurdle-gamma models using the `glmmTMB` package [@glmmTMB2017]. As response variable we used tree mortality in each stand relative to the initial basal area of the stand and considering the time elapsed between consecutive censuses. On stands where there was no evidence of cuts between consecutive censuses, mortality of absent and present trees was used and on stands where there was evidence of cuts between censuses only mortality of present trees was used. As conditional effects we included management legacy, water availability index (Fig. S3), the SPEI for xxx months (Fig. S3) and their interactions<!--# paloma: SPEI for xxx months --> with a ziGamma error distribution using a log link. We included a zero-inflation model with the same fixed variables as for the conditional model. As we were interested in the magnitude of tree mortality, we kept the zero-inflation model with all the fixed effects and their interactions and determined the most parsimonious conditional model by performing a backward stepwise selection using AIC and compare the models with the `bbmle` package [@R-bbmle]. In the end, the selected conditional model included management legacy, water availability index, the interaction between management legacy and water availability index, the SPEI and the interaction between management legacy and the SPEI. The predictor variables were centred and scaled before being included in the models, not strongly collinear and model residual were diagnosed using `DHARMa` package [@R-DHARMa] (Fig. S4 & S5). Then, we obtained the predictions from the conditional model analysing the interaction between water availability index and management legacy on mortality (Fig. X) and the interaction between the SPEI and management legacy on mortality (Fig. S6) using the package `ggeffects` [@ggeffects2018].
+We fitted hurdle-gamma models using the `glmmTMB` package [@R-glmmTMB]. As response variable we used tree mortality in each stand relative to the initial basal area of the stand and considering the time elapsed between consecutive censuses. On stands where there was no evidence of cuts between consecutive censuses, mortality of absent and present trees was used and on stands where there was evidence of cuts between censuses only mortality of present trees was used. As conditional effects we included management legacy, water availability index (Fig. S3), the SPEI for xxx months (Fig. S3) and their interactions<!--# paloma: SPEI for xxx months --> with a ziGamma error distribution using a log link. We included a zero-inflation model with the same fixed variables as for the conditional model. As we were interested in the magnitude of tree mortality, we kept the zero-inflation model with all the fixed effects and their interactions and determined the most parsimonious conditional model by performing a backward stepwise selection using AIC and compare the models with the `bbmle` package [@R-bbmle]. In the end, the selected conditional model included management legacy, water availability index, the interaction between management legacy and water availability index, the SPEI and the interaction between management legacy and the SPEI. The predictor variables were centred and scaled before being included in the models, not strongly collinear and model residual were diagnosed using `DHARMa` package [@R-DHARMa] (Fig. S4 & S5). Then, we obtained the predictions from the conditional model analysing the interaction between water availability index and management legacy on mortality (Fig. X) and the interaction between the SPEI and management legacy on mortality (Fig. S6) using the package.
 
-![Figure S3.](images/s3_wai_spei_distribution.png)
-
-![Figure S4.](images/correlations.png)
-
-![Figure S5.](images/s5_dharma.jpeg)
-
-![Figure S6.](images/s6_plot_twoint_spei-04.png)
+`tidyverse` [@R-tidyverse],
+`here` [@R-here],
+`patchwork` [@R-patchwork],
+`sf` [@R-sf],
+`viridis` [@R-viridis],
+`corrr` [@R-corrr],
+`bbmle` [@R-bbmle],
+`MASS` [@R-MASS],
+`performance` [@R-performance],
+`ggdist` [@R-ggdist],
+`RColorBrewer` [@R-RColorBrewer],
+`testthat` [@R-testthat],
+`factoextra` [@R-factoextra],
+`RColorBrewer` [@R-RColorBrewer],
+`ggh4x` [@R-ggh4x],
+`janitor` [@R-janitor],
+`gt` [@R-gt]
 
 ```{r}
-knitr::write_bib(c("glmmTMB", "bbmle", "DHARMa", "ggeffects"), file = "packages.bib")
+# https://ropensci.org/blog/2021/11/16/how-to-cite-r-and-r-packages/
+
+print(citation(), style = "text")
+
+knitr::write_bib(c(
+  "glmmTMB", "bbmle", "DHARMa",
+  "tidyverse",
+  "here",
+  "patchwork",
+  "sf",
+  "viridis",
+  "corrr",
+  "bbmle",
+  "MASS",
+  "performance",
+  "ggdist",
+  "RColorBrewer",
+  "testthat",
+  "factoextra",
+  "RColorBrewer",
+  "ggh4x",
+  "janitor",
+  "gt"
+  ), file = "packages2.bib")
 ```
-
-## Results
-
-We found that in stands with similar forest structure mortality values were higher in planted stands than in natural stands (Fig. xa). Particularly, we observed that plantations in cluster, which contains plantations with higher coefficient of variation in d.b.h., higher coefficient of variation in height, greater number of saplings and with more unhealthy trees (variables strongly related to abandoned plantations<!--# ref-->) showed greater mortality values (Fig. xa). Furthermore, analysing the interaction between management legacy and water availability index, we observed that mortality values increased mainly in dry regions for planted stands and particularly in those stands with forest structural variables more related to abandoned plantations (Fig. xb)<!--# algun comentario de la interacción gestión * spei -->. Using the model including management legacy and climate-related variables <!--# management legacy, water availability index, the interaction between management legacy and water availability index, the SPEI and the interaction between management legacy and the SPEI -->, we were able to visualise the regions with the greatest predicted mortality values. These results have multiple implications. First, they imply that abandoned plantations are highly vulnerable to climate. Second, they highlight the importance of including forest management legacies into empirical designs. Third, they show that the proposed theoretical framework is valid for testing how detrimental legacy effects contribute to the risk of large-scale tree mortality.
-
-![Figure x.](images/main_plot-02.png)
 
 ## References
