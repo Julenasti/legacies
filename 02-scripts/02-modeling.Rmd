@@ -290,12 +290,12 @@ bbmle::AICtab(
 # https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
 zigamma_model_simres_1 <- simulateResiduals(zigamma_model_1)
 x11()
-# par(mfrow = c(2, 2))
-plot(zigamma_model_simres_1)
+par(mfrow = c(2, 2))
+# plot(zigamma_model_simres_1)
 
-# plotResiduals(zigamma_model_simres_1)
-# plotQQunif(zigamma_model_simres_1)
-# testZeroInflation(zigamma_model_simres_1)
+plotQQunif(zigamma_model_simres_1)
+plotResiduals(zigamma_model_simres_1)
+testZeroInflation(zigamma_model_simres_1)
 
 x11()
 testDispersion(zigamma_model_simres_1)
@@ -499,7 +499,7 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .5,
+    alpha = .6,
     color = NA,
     size = 0
     ) +
@@ -516,12 +516,12 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     legend.position = "none",
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 11, color = "black"),
-    axis.title.y = element_text(size = 11),
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title.y = element_text(size = 9),
     axis.title.x = element_blank()
   ) +
-  guides(color = guide_legend(override.aes = list(linetype = 0))) +
-  ggtitle("Observed data vs predictions increasing\nclimate change impacts")
+  guides(color = guide_legend(override.aes = list(linetype = 0)))
+  # ggtitle("Observed data vs predictions increasing\nclimate change impacts")
 
 gg_dem_clim_all_pred_obs
 
@@ -568,7 +568,7 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .5,
+    alpha = .6,
     color = NA,
     size = .6
     ) +
@@ -586,12 +586,12 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     legend.title = element_blank(),
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 11, color = "black"),
-    axis.title.y = element_text(size = 11),
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title.y = element_text(size = 9),
     axis.title.x = element_blank()
   ) +
-  guides(color = guide_legend(override.aes = list(linetype = 0))) +
-  ggtitle("Observed data in natural & planted stands vs predictions\nsetting all natural stands as C2 Natural & setting all planted\nstands as C2 Planted & increasing climate change impacts")
+  guides(color = guide_legend(override.aes = list(linetype = 0)))
+  # ggtitle("Observed data in natural & planted stands vs predictions\nsetting all natural stands as C2 Natural & setting all planted\nstands as C2 Planted & increasing climate change impacts")
 
 gg_dem_clim_c_pred_obs
 
@@ -609,6 +609,7 @@ ggsave(
     gg_dem_clim_c_pred_obs +
     plot_annotation(tag_levels = "a"),
   here("03-results", "main_figure", "main_plot.png"),
-  width = 11, height = 5
+  width = 9, height = 4,
+  dpi = 600
 )
 ```

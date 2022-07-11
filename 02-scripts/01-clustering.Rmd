@@ -26,6 +26,7 @@ library(ggh4x)
 library(sf)
 library(patchwork)
 library(janitor)
+library(gt)
 ```
 
 ```{r read-data}
@@ -930,8 +931,27 @@ cont_table_abs
 write_csv(cont_table_abs, here("01-data", "legacies", "cont_table_abs.csv"))
 
 cont_table_chan <- k_ifn23 |> 
-  tabyl(k3_ifn2, k3_ifn3)
+  tabyl(k3_ifn2, k3_ifn3) |> 
+  mutate(
+    k3_ifn2 = recode_factor(k3_ifn2,
+                            "1" = "2SFI C1",
+                            "2" = "2SFI C2")
+  ) |> 
+  rename(
+    "3SFI C1" = "1",
+    "3SFI C2" = "2"
+  ) 
 cont_table_chan
+
+gt_cont_table_chan <- cont_table_chan |> 
+  gt(rowname_col = "k3_ifn2") |> 
+  cols_align(
+    align = "center",
+    columns = gt::everything()
+  ) |> 
+  gtExtras::gt_add_divider(columns = "k3_ifn2")
+
+gtsave(gt_cont_table_chan, "gt_cont_table_chan.rtf", path = here("01-data", "legacies"))
 
 write_csv(cont_table_chan, here("01-data", "legacies", "cont_table_chan.csv"))
 ```
