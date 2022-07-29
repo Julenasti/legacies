@@ -1269,3 +1269,21 @@ ggsave(
   width = 6, height = 4
 )
 ```
+
+------------------------------------------------------------------------
+
+<details>
+
+<summary>
+
+Session Info
+
+</summary>
+
+```{r session-info}
+Sys.time()
+git2r::repository()
+sessionInfo()
+```
+
+</details>

@@ -17,6 +17,7 @@ library(ggh4x)
 library(sf)
 library(patchwork)
 library(janitor)
+library(gt)
 ```
 
 ``` r
@@ -113,7 +114,7 @@ test_that("NA is natural", {
 })
 ```
 
-    ## Test passed 🥇
+    ## Test passed 🌈
 
 ``` r
 Psy23_planted <- Psy23 |>
@@ -443,7 +444,7 @@ test_that("type2 == type3", {
 })
 ```
 
-    ## Test passed 😀
+    ## Test passed 🥇
 
 ``` r
 Psy23_final <- Psy23_final |> 
@@ -455,7 +456,7 @@ test_that("Plotcode2 == Plotcode3", {
 })
 ```
 
-    ## Test passed 🥇
+    ## Test passed 🌈
 
 ``` r
 map(Psy23_final, ~sum(is.na(.)))
@@ -702,7 +703,7 @@ test_that("Plotcode2 == Plotcode3", {
                })
 ```
 
-    ## Test passed 😀
+    ## Test passed 🥳
 
 # PCA and clustering: only planted forests
 
@@ -1846,15 +1847,34 @@ cont_table_abs
 write_csv(cont_table_abs, here("01-data", "legacies", "cont_table_abs.csv"))
 
 cont_table_chan <- k_ifn23 |> 
-  tabyl(k3_ifn2, k3_ifn3)
+  tabyl(k3_ifn2, k3_ifn3) |> 
+  mutate(
+    k3_ifn2 = recode_factor(k3_ifn2,
+                            "1" = "2SFI C1",
+                            "2" = "2SFI C2")
+  ) |> 
+  rename(
+    "3SFI C1" = "1",
+    "3SFI C2" = "2"
+  ) 
 cont_table_chan
 ```
 
-    ##  k3_ifn2    1    2
-    ##        1 2787  643
-    ##        2  148 1584
+    ##  k3_ifn2 3SFI C1 3SFI C2
+    ##  2SFI C1    2787     643
+    ##  2SFI C2     148    1584
 
 ``` r
+gt_cont_table_chan <- cont_table_chan |> 
+  gt(rowname_col = "k3_ifn2") |> 
+  cols_align(
+    align = "center",
+    columns = gt::everything()
+  ) |> 
+  gtExtras::gt_add_divider(columns = "k3_ifn2")
+
+gtsave(gt_cont_table_chan, "gt_cont_table_chan.rtf", path = here("01-data", "legacies"))
+
 write_csv(cont_table_chan, here("01-data", "legacies", "cont_table_chan.csv"))
 ```
 
@@ -2220,3 +2240,78 @@ ggsave(
   width = 6, height = 4
 )
 ```
+
+------------------------------------------------------------------------
+
+<details>
+<summary>
+
+Session Info
+
+</summary>
+
+``` r
+Sys.time()
+```
+
+    ## [1] "2022-07-29 12:57:58 CEST"
+
+``` r
+git2r::repository()
+```
+
+    ## Local:    main C:/Users/julen/OneDrive/Escritorio/GitHub-col/legacies
+    ## Remote:   main @ origin (https://github.com/Julenasti/legacies.git)
+    ## Head:     [eb2fa0c] 2022-07-29: update summary psy
+
+``` r
+sessionInfo()
+```
+
+    ## R version 4.2.1 (2022-06-23 ucrt)
+    ## Platform: x86_64-w64-mingw32/x64 (64-bit)
+    ## Running under: Windows 10 x64 (build 19044)
+    ## 
+    ## Matrix products: default
+    ## 
+    ## locale:
+    ## [1] LC_COLLATE=English_United Kingdom.utf8 
+    ## [2] LC_CTYPE=English_United Kingdom.utf8   
+    ## [3] LC_MONETARY=English_United Kingdom.utf8
+    ## [4] LC_NUMERIC=C                           
+    ## [5] LC_TIME=English_United Kingdom.utf8    
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ##  [1] gt_0.6.0           janitor_2.1.0      patchwork_1.1.1    sf_1.0-7          
+    ##  [5] ggh4x_0.2.1        RColorBrewer_1.1-3 factoextra_1.0.7   testthat_3.1.4    
+    ##  [9] here_1.0.1         forcats_0.5.1      stringr_1.4.0      dplyr_1.0.9       
+    ## [13] purrr_0.3.4        readr_2.1.2        tidyr_1.2.0        tibble_3.1.7      
+    ## [17] ggplot2_3.3.6      tidyverse_1.3.1   
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] fs_1.5.2           fontawesome_0.2.2  lubridate_1.8.0    bit64_4.0.5       
+    ##  [5] httr_1.4.3         rprojroot_2.0.3    tools_4.2.1        backports_1.4.1   
+    ##  [9] utf8_1.2.2         R6_2.5.1           KernSmooth_2.23-20 DBI_1.1.3         
+    ## [13] colorspace_2.0-3   withr_2.5.0        tidyselect_1.1.2   git2r_0.30.1      
+    ## [17] bit_4.0.4          compiler_4.2.1     cli_3.3.0          rvest_1.0.2       
+    ## [21] xml2_1.3.3         desc_1.4.1         labeling_0.4.2     checkmate_2.1.0   
+    ## [25] scales_1.2.0       classInt_0.4-7     proxy_0.4-27       digest_0.6.29     
+    ## [29] rmarkdown_2.14     pkgconfig_2.0.3    htmltools_0.5.2    maps_3.4.0        
+    ## [33] highr_0.9          dbplyr_2.2.1       fastmap_1.1.0      rlang_1.0.3       
+    ## [37] readxl_1.4.0       rstudioapi_0.13    farver_2.1.1       generics_0.1.3    
+    ## [41] jsonlite_1.8.0     vroom_1.5.7        car_3.1-0          magrittr_2.0.3    
+    ## [45] Rcpp_1.0.9         munsell_0.5.0      fansi_1.0.3        abind_1.4-5       
+    ## [49] lifecycle_1.0.1    stringi_1.7.6      yaml_2.3.5         carData_3.0-5     
+    ## [53] snakecase_0.11.0   gtExtras_0.4.1     brio_1.1.3         paletteer_1.4.0   
+    ## [57] grid_4.2.1         parallel_4.2.1     ggrepel_0.9.1      crayon_1.5.1      
+    ## [61] haven_2.5.0        hms_1.1.1          knitr_1.39.3       pillar_1.7.0      
+    ## [65] ggpubr_0.4.0       ggsignif_0.6.3     pkgload_1.3.0      reprex_2.0.1      
+    ## [69] glue_1.6.2         evaluate_0.15      modelr_0.1.8       vctrs_0.4.1       
+    ## [73] tzdb_0.3.0         cellranger_1.1.0   gtable_0.3.0       rematch2_2.1.2    
+    ## [77] assertthat_0.2.1   xfun_0.31          broom_1.0.0        e1071_1.7-11      
+    ## [81] rstatix_0.7.0      class_7.3-20       units_0.8-0        ellipsis_0.3.2
+
+</details>

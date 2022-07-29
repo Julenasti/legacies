@@ -650,23 +650,41 @@ bbmle::AICtab(
 ## model checking and diagnostics ------------------------------------------
 # https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
 zigamma_model_simres_1 <- simulateResiduals(zigamma_model_1)
-x11()
+# x11()
 # par(mfrow = c(2, 2))
-plot(zigamma_model_simres_1)
+# plot(zigamma_model_simres_1)
+
+plotQQunif(zigamma_model_simres_1)
 ```
 
 ![](02-modeling_files/figure-gfm/modelling-1.png)<!-- -->
 
 ``` r
-# plotResiduals(zigamma_model_simres_1)
-# plotQQunif(zigamma_model_simres_1)
-# testZeroInflation(zigamma_model_simres_1)
-
-x11()
-testDispersion(zigamma_model_simres_1)
+plotResiduals(zigamma_model_simres_1)
 ```
 
 ![](02-modeling_files/figure-gfm/modelling-2.png)<!-- -->
+
+``` r
+testZeroInflation(zigamma_model_simres_1)
+```
+
+![](02-modeling_files/figure-gfm/modelling-3.png)<!-- -->
+
+    ## 
+    ##  DHARMa zero-inflation test via comparison to expected zeros with
+    ##  simulation under H0 = fitted model
+    ## 
+    ## data:  simulationOutput
+    ## ratioObsSim = 0.99946, p-value = 0.992
+    ## alternative hypothesis: two.sided
+
+``` r
+# x11()
+testDispersion(zigamma_model_simres_1)
+```
+
+![](02-modeling_files/figure-gfm/modelling-4.png)<!-- -->
 
     ## 
     ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs.
@@ -685,23 +703,10 @@ plot(check_predictions(zigamma_model_1)) +
   coord_cartesian(xlim = c(0, 0.02))
 ```
 
-![](02-modeling_files/figure-gfm/modelling-3.png)<!-- -->
+![](02-modeling_files/figure-gfm/modelling-5.png)<!-- -->
 
 ``` r
-testZeroInflation(zigamma_model_simres_1)
-```
-
-![](02-modeling_files/figure-gfm/modelling-4.png)<!-- -->
-
-    ## 
-    ##  DHARMa zero-inflation test via comparison to expected zeros with
-    ##  simulation under H0 = fitted model
-    ## 
-    ## data:  simulationOutput
-    ## ratioObsSim = 0.99946, p-value = 0.992
-    ## alternative hypothesis: two.sided
-
-``` r
+# testZeroInflation(zigamma_model_simres_1)
 # shows the simulated number
 # of zeroes with your actual number shown as red. 
 # we have the same number as expected
@@ -996,7 +1001,7 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .5,
+    alpha = .6,
     color = NA,
     size = 0
     ) +
@@ -1013,17 +1018,17 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     legend.position = "none",
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 11, color = "black"),
-    axis.title.y = element_text(size = 11),
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title.y = element_text(size = 9),
     axis.title.x = element_blank()
   ) +
-  guides(color = guide_legend(override.aes = list(linetype = 0))) +
-  ggtitle("Observed data vs predictions increasing\nclimate change impacts")
+  guides(color = guide_legend(override.aes = list(linetype = 0)))
+  # ggtitle("Observed data vs predictions increasing\nclimate change impacts")
 
 gg_dem_clim_all_pred_obs
 ```
 
-![](02-modeling_files/figure-gfm/modelling-5.png)<!-- -->
+![](02-modeling_files/figure-gfm/modelling-6.png)<!-- -->
 
 ``` r
 dem_clim_c_pred_obs <- dem_clim_pred_obs_n |> 
@@ -1082,7 +1087,7 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .5,
+    alpha = .6,
     color = NA,
     size = .6
     ) +
@@ -1100,17 +1105,17 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     legend.title = element_blank(),
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 11, color = "black"),
-    axis.title.y = element_text(size = 11),
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title.y = element_text(size = 9),
     axis.title.x = element_blank()
   ) +
-  guides(color = guide_legend(override.aes = list(linetype = 0))) +
-  ggtitle("Observed data in natural & planted stands vs predictions\nsetting all natural stands as C2 Natural & setting all planted\nstands as C2 Planted & increasing climate change impacts")
+  guides(color = guide_legend(override.aes = list(linetype = 0)))
+  # ggtitle("Observed data in natural & planted stands vs predictions\nsetting all natural stands as C2 Natural & setting all planted\nstands as C2 Planted & increasing climate change impacts")
 
 gg_dem_clim_c_pred_obs
 ```
 
-![](02-modeling_files/figure-gfm/modelling-6.png)<!-- -->
+![](02-modeling_files/figure-gfm/modelling-7.png)<!-- -->
 
 ``` r
 # save plots --------------------------------------------------------------
@@ -1127,6 +1132,93 @@ ggsave(
     gg_dem_clim_c_pred_obs +
     plot_annotation(tag_levels = "a"),
   here("03-results", "main_figure", "main_plot.png"),
-  width = 11, height = 5
+  width = 9, height = 4,
+  dpi = 600
 )
 ```
+
+------------------------------------------------------------------------
+
+<details>
+<summary>
+
+Session Info
+
+</summary>
+
+``` r
+Sys.time()
+```
+
+    ## [1] "2022-07-29 13:04:49 CEST"
+
+``` r
+git2r::repository()
+```
+
+    ## Local:    main C:/Users/julen/OneDrive/Escritorio/GitHub-col/legacies
+    ## Remote:   main @ origin (https://github.com/Julenasti/legacies.git)
+    ## Head:     [eb2fa0c] 2022-07-29: update summary psy
+
+``` r
+sessionInfo()
+```
+
+    ## R version 4.2.1 (2022-06-23 ucrt)
+    ## Platform: x86_64-w64-mingw32/x64 (64-bit)
+    ## Running under: Windows 10 x64 (build 19044)
+    ## 
+    ## Matrix products: default
+    ## 
+    ## locale:
+    ## [1] LC_COLLATE=English_United Kingdom.utf8 
+    ## [2] LC_CTYPE=English_United Kingdom.utf8   
+    ## [3] LC_MONETARY=English_United Kingdom.utf8
+    ## [4] LC_NUMERIC=C                           
+    ## [5] LC_TIME=English_United Kingdom.utf8    
+    ## 
+    ## attached base packages:
+    ## [1] stats4    stats     graphics  grDevices utils     datasets  methods  
+    ## [8] base     
+    ## 
+    ## other attached packages:
+    ##  [1] testthat_3.1.4     RColorBrewer_1.1-3 ggdist_3.1.1       performance_0.9.1 
+    ##  [5] MASS_7.3-57        bbmle_1.0.25       corrr_0.4.3        DHARMa_0.4.5      
+    ##  [9] glmmTMB_1.1.3      viridis_0.6.2      viridisLite_0.4.0  sf_1.0-7          
+    ## [13] patchwork_1.1.1    here_1.0.1         forcats_0.5.1      stringr_1.4.0     
+    ## [17] dplyr_1.0.9        purrr_0.3.4        readr_2.1.2        tidyr_1.2.0       
+    ## [21] tibble_3.1.7       ggplot2_3.3.6      tidyverse_1.3.1   
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] minqa_1.2.4          colorspace_2.0-3     ellipsis_0.3.2      
+    ##  [4] class_7.3-20         rprojroot_2.0.3      fs_1.5.2            
+    ##  [7] rstudioapi_0.13      proxy_0.4-27         farver_2.1.1        
+    ## [10] hexbin_1.28.2        bit64_4.0.5          fansi_1.0.3         
+    ## [13] mvtnorm_1.1-3        lubridate_1.8.0      xml2_1.3.3          
+    ## [16] splines_4.2.1        knitr_1.39.3         jsonlite_1.8.0      
+    ## [19] nloptr_2.0.3         broom_1.0.0          dbplyr_2.2.1        
+    ## [22] compiler_4.2.1       httr_1.4.3           backports_1.4.1     
+    ## [25] assertthat_0.2.1     Matrix_1.4-1         fastmap_1.1.0       
+    ## [28] cli_3.3.0            htmltools_0.5.2      tools_4.2.1         
+    ## [31] gtable_0.3.0         glue_1.6.2           maps_3.4.0          
+    ## [34] Rcpp_1.0.9           cellranger_1.1.0     vctrs_0.4.1         
+    ## [37] nlme_3.1-157         insight_0.18.0       xfun_0.31           
+    ## [40] brio_1.1.3           lme4_1.1-30          rvest_1.0.2         
+    ## [43] lifecycle_1.0.1      gap.datasets_0.0.5   scales_1.2.0        
+    ## [46] vroom_1.5.7          hms_1.1.1            parallel_4.2.1      
+    ## [49] TMB_1.9.0            yaml_2.3.5           see_0.7.1           
+    ## [52] gridExtra_2.3        bdsmatrix_1.3-6      stringi_1.7.6       
+    ## [55] highr_0.9            gap_1.2.3-6          e1071_1.7-11        
+    ## [58] boot_1.3-28          rlang_1.0.3          pkgconfig_2.0.3     
+    ## [61] distributional_0.3.0 evaluate_0.15        lattice_0.20-45     
+    ## [64] labeling_0.4.2       bit_4.0.4            tidyselect_1.1.2    
+    ## [67] magrittr_2.0.3       R6_2.5.1             generics_0.1.3      
+    ## [70] DBI_1.1.3            pillar_1.7.0         haven_2.5.0         
+    ## [73] withr_2.5.0          units_0.8-0          modelr_0.1.8        
+    ## [76] crayon_1.5.1         KernSmooth_2.23-20   utf8_1.2.2          
+    ## [79] tzdb_0.3.0           rmarkdown_2.14       grid_4.2.1          
+    ## [82] readxl_1.4.0         git2r_0.30.1         reprex_2.0.1        
+    ## [85] digest_0.6.29        classInt_0.4-7       numDeriv_2016.8-1.1 
+    ## [88] munsell_0.5.0
+
+</details>

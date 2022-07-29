@@ -289,15 +289,15 @@ bbmle::AICtab(
 ## model checking and diagnostics ------------------------------------------
 # https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
 zigamma_model_simres_1 <- simulateResiduals(zigamma_model_1)
-x11()
-par(mfrow = c(2, 2))
+# x11()
+# par(mfrow = c(2, 2))
 # plot(zigamma_model_simres_1)
 
 plotQQunif(zigamma_model_simres_1)
 plotResiduals(zigamma_model_simres_1)
 testZeroInflation(zigamma_model_simres_1)
 
-x11()
+# x11()
 testDispersion(zigamma_model_simres_1)
 # shows your actual dispersion
 # with a histogram of simulated residuals. 
@@ -306,7 +306,7 @@ testDispersion(zigamma_model_simres_1)
 plot(check_predictions(zigamma_model_1)) +
   coord_cartesian(xlim = c(0, 0.02))
 
-testZeroInflation(zigamma_model_simres_1)
+# testZeroInflation(zigamma_model_simres_1)
 # shows the simulated number
 # of zeroes with your actual number shown as red. 
 # we have the same number as expected
@@ -613,3 +613,21 @@ ggsave(
   dpi = 600
 )
 ```
+
+------------------------------------------------------------------------
+
+<details>
+
+<summary>
+
+Session Info
+
+</summary>
+
+```{r session-info}
+Sys.time()
+git2r::repository()
+sessionInfo()
+```
+
+</details>

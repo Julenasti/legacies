@@ -174,3 +174,24 @@ knitr::write_bib(c(
 ```
 
 ## References
+
+::: {#refs}
+:::
+
+------------------------------------------------------------------------
+
+<details>
+
+<summary>
+
+Session Info
+
+</summary>
+
+```{r session-info}
+Sys.time()
+git2r::repository()
+sessionInfo()
+```
+
+</details>
