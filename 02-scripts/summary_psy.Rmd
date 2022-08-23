@@ -109,15 +109,15 @@ Evapotranspiration (ET0) Climate Database v2 [@trabucco2019] (Fig. S5b).
 ## Analyses
 
 We fitted hurdle-gamma models using the `glmmTMB` package [@R-glmmTMB].
-As response variable we used tree mortality in each stand relative to
-the initial basal area of the stand and considering the time elapsed
-between consecutive censuses. On stands where there was no evidence of
-cuts between consecutive censuses, mortality of absent and present trees
-was used and on stands where there was evidence of cuts between censuses
-only mortality of present trees was used. As conditional effects we
-included management legacy, water availability index, SPEI and their
-interactions with a ziGamma error distribution using a log link. We
-included a zero-inflation model with the same fixed variables as for the
+We modeled tree mortality in each stand relative to the initial basal
+area of the stand and considering the time elapsed between consecutive
+censuses as a function of management legacy, water availability index,
+SPEI and their interactions with a `ziGamma` conditional error
+distribution using a `log` link. On stands where there was no evidence
+of cuts between consecutive censuses, mortality of absent and present
+trees was used and on stands where there was evidence of cuts between
+censuses only mortality of present trees was used. We included a
+zero-inflation model with the same fixed variables as for the
 conditional model. The predictor variables were not strongly collinear
 and model residual were diagnosed using `DHARMa` package [@R-DHARMa]
 (Fig. S6 & S7).
@@ -182,11 +182,7 @@ knitr::write_bib(c(
 
 <details>
 
-<summary>
-
-Session Info
-
-</summary>
+<summary>Session Info</summary>
 
 ```{r session-info}
 Sys.time()
