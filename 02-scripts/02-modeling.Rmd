@@ -499,13 +499,14 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .6,
+    alpha = .8,
     color = NA,
     size = 0
     ) +
     stat_halfeye(
     .width = 0,
     slab_fill = NA,
+    size = 2
   ) +
   ylab(expression(paste("Mortality (%",~ha^-1~year^-1,")"))) +
   scale_fill_manual(values = c("#E1BE6A", "#40B0A6"),
@@ -513,11 +514,15 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
   scale_color_manual(values = c("#E1BE6A", "#40B0A6")) +
   coord_cartesian(ylim = c(0, 3)) +
   theme(
+    text = element_text(family = "sans"),
     legend.position = "none",
+    legend.text = element_text(size = 7),
+    legend.key = element_blank(),
+    legend.title = element_blank(),
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 9, color = "black"),
-    axis.title.y = element_text(size = 9),
+    axis.text = element_text(size = 7, color = "black"),
+    axis.title.y = element_text(size = 7),
     axis.title.x = element_blank()
   ) +
   guides(color = guide_legend(override.aes = list(linetype = 0)))
@@ -568,13 +573,14 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .6,
+    alpha = .8,
     color = NA,
-    size = .6
+    size = 0
     ) +
     stat_halfeye(
     .width = 0,
     slab_fill = NA,
+    size = 2
   ) +
   ylab(expression(paste("Mortality (%",~ha^-1~year^-1,")"))) +
   scale_fill_manual(values = c("#E1BE6A", "#40B0A6"),
@@ -582,12 +588,14 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
   scale_color_manual(values = c("#E1BE6A", "#40B0A6")) +
   coord_cartesian(ylim = c(0, 3)) +
   theme(
+    text = element_text(family = "sans"),
     legend.key = element_blank(),
     legend.title = element_blank(),
+    legend.text = element_text(size = 7),
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 9, color = "black"),
-    axis.title.y = element_text(size = 9),
+    axis.text = element_text(size = 7, color = "black"),
+    axis.title.y = element_text(size = 7),
     axis.title.x = element_blank()
   ) +
   guides(color = guide_legend(override.aes = list(linetype = 0)))
@@ -604,12 +612,41 @@ ggsave(
 )
 
 ggsave(
-  plot = gg_dem_clim_all_pred_obs + 
-    theme(legend.position = "none") +
-    gg_dem_clim_c_pred_obs +
-    plot_annotation(tag_levels = "a"),
+  plot = (gg_dem_clim_all_pred_obs + 
+    theme(legend.position = "none")) /
+    (gg_dem_clim_c_pred_obs) +
+    plot_annotation(
+      tag_levels = "A",
+      tag_prefix = "(", tag_suffix = ")") +
+    plot_layout(guides = "collect") & 
+    theme(
+      legend.position = "bottom",
+      plot.tag = element_text(face = "bold",
+                              size = 9)
+      ),
   here("03-results", "main_figure", "main_plot.png"),
-  width = 9, height = 4,
+  width = 9, height = 15,
+  unit = "cm",
+  dpi = 600
+)
+
+library(svglite)
+ggsave(
+  plot = (gg_dem_clim_all_pred_obs + 
+    theme(legend.position = "none")) /
+    (gg_dem_clim_c_pred_obs) +
+    plot_annotation(
+      tag_levels = "A",
+      tag_prefix = "(", tag_suffix = ")") +
+    plot_layout(guides = "collect") & 
+    theme(
+      legend.position = "bottom",
+      plot.tag = element_text(face = "bold",
+                              size = 9)
+      ),
+  here("03-results", "main_figure", "main_plot.svg"),
+  width = 9, height = 15,
+  unit = "cm",
   dpi = 600
 )
 ```
