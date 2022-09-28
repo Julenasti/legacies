@@ -124,11 +124,11 @@ and model residual were diagnosed using `DHARMa` package [@R-DHARMa]
 
 We used predictive comparisons by applying a reduction of 18.435 of
 water availability index and 0.069 of SPEI to all the current stand
-conditions. Units for reducing the water availability index and SPEI
-were selected as the difference between the median and the first
-quantile of each variable when analysing all stands together. We also
-compared the observed mortality with the predicted mortality of the
-model for each management legacy (Fig. IA in Box 1).
+conditions [@gelman2007]. Units for reducing the water availability
+index and SPEI were selected as the difference between the median and
+the first quantile of each variable when analysing all stands together.
+We also compared the observed mortality with the predicted mortality of
+the model for each management legacy (Fig. IA in Box 1).
 
 Finally, we analysed transitions in structural typologies between the
 second and the third Spanish Forest Inventory censuses (Table S1) and we
