@@ -1,0 +1,86 @@
+---
+title: "Key Figure C"
+format:
+  html: default
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| warning: false
+#| message: false
+
+# we acknowledge that this figure is based on:
+# https://stackoverflow.com/questions/65918325/how-to-plot-surface-fit-through-3d-data-in-r
+# also, of potential interest:
+# https://stackoverflow.com/questions/50573936/r-how-to-change-color-of-plotly-3d-surface
+library(mgcv)
+library(plotly)
+library(here)
+library(htmlwidgets)
+
+# fit a gam model
+mod <- gam(qsec ~ te(hp) + te(wt) + ti(hp, wt), data = mtcars)
+
+# make some predictions for the model at different combinations of hp and wt
+hp_seq <- seq(min(mtcars$hp, na.rm = TRUE), max(mtcars$hp, na.rm=TRUE), length = 25)
+wt_seq <- seq(min(mtcars$wt, na.rm = TRUE), max(mtcars$wt, na.rm=TRUE), length = 25)
+
+# make a function that will generate predictions
+predfun <- function(x, y){
+  newdat <- data.frame(hp = x, wt = y)
+  predict(mod, newdata = newdat)
+}
+
+# we apply that prediction function to the sequences of data we made above
+fit <- outer(hp_seq, wt_seq, Vectorize(predfun))
+
+# set axes title
+# https://plotly.com/r/3d-axes/
+axx <- list(
+  title = "Composition"
+)
+axy <- list(
+  title = "Distribution"
+)
+axz <- list(
+  title = "Structure"
+)
+
+# ticks formatting
+axx <- list(
+  title = "Composition – Lack of adaptive capacity",
+  ticketmode = 'array',
+  ticktext = c("High", "Low"),
+  tickvals = c(50, 300)
+)
+axy <- list(
+  title = "Distribution – Exposure",
+  ticktext = c("Low", "High"),
+  tickvals = c(2, 5)
+)
+axz <- list(
+  title = "Structure – Sensitivity",
+  ticktext = c("Low", "High"),
+  tickvals = c(14, 24)
+)
+
+# put everything together
+# https://hauselin.github.io/colorpalettejs/
+fig <- plot_ly() |> 
+  add_surface(
+    x = ~hp_seq, y = ~wt_seq, z = t(fit), showscale = FALSE
+    # colorscale = list(c(0, 1), c("#440154", "#fde725"))
+    ) |>
+  layout(scene = list(xaxis = axx, yaxis = axy,zaxis = axz))
+
+fig
+
+# export
+saveWidget(fig, file = here("03-results", "main_figure", "fig_key.html"))
+
+```
+
+
+
