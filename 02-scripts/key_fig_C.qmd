@@ -69,11 +69,13 @@ axz <- list(
 # put everything together
 # https://hauselin.github.io/colorpalettejs/
 fig <- plot_ly() |> 
-  add_surface(
-    x = ~hp_seq, y = ~wt_seq, z = t(fit), showscale = FALSE
+  add_trace(
+    x = ~hp_seq, y = ~wt_seq, z = t(fit), 
+    showscale = T,
+    type = "surface"
     # colorscale = list(c(0, 1), c("#440154", "#fde725"))
     ) |>
-  layout(scene = list(xaxis = axx, yaxis = axy,zaxis = axz))
+  layout(scene = list(xaxis = axx, yaxis = axy, zaxis = axz))
 
 fig
 

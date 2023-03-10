@@ -52,6 +52,18 @@ dem_clim <- dem_clim |>
   )
  
 table(dem_clim$k_type)
+
+# absolute mortality
+dem_clim_mort_abs <- dem_clim |> 
+  mutate(
+    mort_abs = ba_ifn2 * mort_real
+  ) |> 
+  filter(mort_abs > 0) |> 
+  group_by(k_type) |> 
+  summarise(
+    mort_abs_type = median(mort_abs, na.rm = T)
+  )
+
 ```
 
 # Exploratory data analyses
@@ -302,7 +314,7 @@ testDispersion(zigamma_model_simres_1)
 # shows your actual dispersion
 # with a histogram of simulated residuals. 
 # Since your value is to the right it indicates
-# that your model has over-dispersion
+# that your model has a bit of overdispersion
 plot(check_predictions(zigamma_model_1)) +
   coord_cartesian(xlim = c(0, 0.02))
 
@@ -313,27 +325,6 @@ plot(check_predictions(zigamma_model_1)) +
 # so there is no zero-inflation now
 # makes sense to fit a zero-inflated model
 
-# sensitivity analysis
-# predict_real <- predict(
-#   object = zigamma_model_1, newdata = dem_clim,
-#   se.fit = TRUE, type = "conditional"
-# )
-# 
-# dem_clim_pred <- dem_clim |>
-#   mutate(
-#     predFE = predict_real$fit
-#   )
-# 
-# dem_clim_pred_n0 <- dem_clim_pred |>
-#   filter(mort_real > 0)
-# 
-# ggplot(dem_clim_pred_n0, aes(
-#   mort_real, predFE
-#   )) +
-#   geom_point(alpha = .7) +
-#   geom_abline(intercept = 0, slope = 1, color = "red") +
-#   coord_cartesian(xlim = c(0, .08), ylim = c(0, .08))
-
 ## predictions -------------------------------------------
 summary(zigamma_model_1)
 
@@ -341,18 +332,20 @@ summary(zigamma_model_1)
 
 # newdata
 # change climate
-# reduction in WAI & spei per plot equal to 
-# the difference between the median & the 1st Qu
+# reduction in WAI & spei per plot between the median and the 30 percentile
+# http://www.ub.edu/irbio/droughts-and-rising-sea-levels-are-the-impacts-of-climate-change-that-will-most-affect-the-mediterranean-basin-n-952-en
 summary(dem_clim$WAIplot)
+quantile(dem_clim$WAIplot, probs = c(.25, .3, .5))
 summary(dem_clim$speimin)
+quantile(dem_clim$speimin, probs = c(.25, .3, .5))
 
+# change legacy + climate impact
 dem_clim_cc <- dem_clim |> 
   mutate(
-    WAIplot = WAIplot - 18.435,
-    speimin = speimin - 0.069
+    WAIplot = WAIplot - 15.59853,
+    speimin = speimin - 0.069809809
   )
 
-# change legacy for planted plots + climate impact
 dem_clim_c2p_cc <- dem_clim |> 
     filter(
     k_type == "1_Planted" |
@@ -360,8 +353,8 @@ dem_clim_c2p_cc <- dem_clim |>
     ) |> 
   mutate(
     k_type = "2_Planted",
-    WAIplot = WAIplot - 18.435,
-    speimin = speimin - 0.069
+    WAIplot = WAIplot - 15.59853,
+    speimin = speimin - 0.069809
   )
 
 dem_clim_c2n_cc <- dem_clim |> 
@@ -371,8 +364,8 @@ dem_clim_c2n_cc <- dem_clim |>
     ) |> 
   mutate(
     k_type = "2_Natural",
-    WAIplot = WAIplot - 18.435,
-    speimin = speimin - 0.069
+    WAIplot = WAIplot - 15.59853,
+    speimin = speimin - 0.069809
   )
 
 dem_clim_new <- list(
@@ -381,6 +374,38 @@ dem_clim_new <- list(
   dem_clim_c2n_cc
 )
 
+# change legacy + without climate impact
+dem_clim_no_cc <- dem_clim
+
+dem_clim_c2p_no_cc <- dem_clim |> 
+    filter(
+    k_type == "1_Planted" |
+      k_type == "2_Planted"
+    ) |> 
+  mutate(
+    k_type = "2_Planted",
+    WAIplot = WAIplot,
+    speimin = speimin
+  )
+
+dem_clim_c2n_no_cc <- dem_clim |> 
+    filter(
+    k_type == "1_Natural" |
+      k_type == "2_Natural"
+    ) |> 
+  mutate(
+    k_type = "2_Natural",
+    WAIplot = WAIplot,
+    speimin = speimin
+  )
+
+dem_clim_new_no <- list(
+  dem_clim_no_cc,
+  dem_clim_c2p_no_cc,
+  dem_clim_c2n_no_cc
+)
+
+# climate impact
 # https://www.rdocumentation.org/packages/glmmTMB/versions/1.1.3/topics/predict.glmmTMB
 dem_clim_pred <- map(dem_clim_new, ~predict(
   object = zigamma_model_1, newdata = .x,
@@ -403,6 +428,20 @@ arg2_dat_pred <- list(
 dem_clim_new_pred <- arg2_dat_pred |>
   pmap(add_predictions)
 
+# without climate impact
+dem_clim_pred_no <- map(dem_clim_new_no, ~predict(
+  object = zigamma_model_1, newdata = .x,
+  se.fit = TRUE, type = "conditional"
+))
+
+arg2_dat_pred_no <- list(
+  dat = dem_clim_new_no, 
+  pred = dem_clim_pred_no
+  )
+
+dem_clim_new_pred_no <- arg2_dat_pred_no |>
+  pmap(add_predictions)
+
 # add observed data
 ## all plots
 dem_clim_obs_all <- dem_clim
@@ -421,8 +460,9 @@ dem_clim_obs_n <- dem_clim |>
       k_type == "2_Natural"
     ) 
 
-dem_clim_pred_obs <- append(
+dem_clim_pred_obs <- c(
   dem_clim_new_pred, 
+  dem_clim_new_pred_no,
   c(list(dem_clim_obs_all),
   list(dem_clim_obs_p),
   list(dem_clim_obs_n))
@@ -433,6 +473,9 @@ names(dem_clim_pred_obs) <- c(
   "dem_clim_cc",
   "dem_clim_c2p_cc",
   "dem_clim_c2n_cc",
+  "dem_clim_no_cc",
+  "dem_clim_c2p_no_cc",
+  "dem_clim_c2n_no_cc",
   "dem_clim_obs_all",
   "dem_clim_obs_p",
   "dem_clim_obs_n"
@@ -458,6 +501,7 @@ table(dem_clim_pred_obs_n$df)
 
 dem_clim_all_pred_obs <- dem_clim_pred_obs_n |> 
   filter(df == "dem_clim_cc" |
+           df == "dem_clim_no_cc" |
            df == "dem_clim_obs_all")
 
 table(dem_clim_all_pred_obs$k_type)
@@ -489,7 +533,8 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     df = recode_factor(
       df, 
       "dem_clim_obs_all" = "Observed",
-      "dem_clim_cc" = "Predicted"
+      "dem_clim_no_cc" = "Predicted",
+      "dem_clim_cc" = "Predicted under climate change"
     )
   ) |>
   ggplot(aes(x = k_type, y = mortality_pred_obs * 100,
@@ -506,16 +551,16 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     stat_halfeye(
     .width = 0,
     slab_fill = NA,
-    size = 2
+    size = 1,
+    point_interval = "mean_qi"
   ) +
   ylab(expression(paste("Mortality (%",~ha^-1~year^-1,")"))) +
-  scale_fill_manual(values = c("#E1BE6A", "#40B0A6"),
+  scale_fill_manual(values = c("#E1BE6A", "#40B0A6", "#CC6677"),
                     guide = "none") +
-  scale_color_manual(values = c("#E1BE6A", "#40B0A6")) +
+  scale_color_manual(values = c("#E1BE6A", "#40B0A6", "#CC6677")) +
   coord_cartesian(ylim = c(0, 3)) +
   theme(
     text = element_text(family = "sans"),
-    legend.position = "none",
     legend.text = element_text(size = 7),
     legend.key = element_blank(),
     legend.title = element_blank(),
@@ -533,8 +578,10 @@ gg_dem_clim_all_pred_obs
 dem_clim_c_pred_obs <- dem_clim_pred_obs_n |> 
   filter(
     df == "dem_clim_c2p_cc" |
+      df == "dem_clim_c2p_no_cc" |
       df == "dem_clim_obs_p" |
       df == "dem_clim_c2n_cc" |
+      df == "dem_clim_c2n_no_cc" |
       df == "dem_clim_obs_n"
     )
 
@@ -562,9 +609,11 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     df = recode_factor(
       df, 
       "dem_clim_obs_p" = "Observed",
-      "dem_clim_c2p_cc" = "Predicted",
+      "dem_clim_c2p_no_cc" = "Predicted",
+      "dem_clim_c2p_cc" = "Predicted under climate change",
       "dem_clim_obs_n" = "Observed",
-      "dem_clim_c2n_cc" = "Predicted",
+      "dem_clim_c2n_no_cc" = "Predicted",
+      "dem_clim_c2n_cc" = "Predicted under climate change",
     )
   ) |>
   ggplot(aes(x = k_type, y = mortality_pred_obs * 100,
@@ -580,12 +629,13 @@ gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
     stat_halfeye(
     .width = 0,
     slab_fill = NA,
-    size = 2
+    size = 2,
+    point_interval = "mean_qi"
   ) +
   ylab(expression(paste("Mortality (%",~ha^-1~year^-1,")"))) +
-  scale_fill_manual(values = c("#E1BE6A", "#40B0A6"),
+  scale_fill_manual(values = c("#E1BE6A", "#40B0A6", "#CC6677"),
                     guide = "none") +
-  scale_color_manual(values = c("#E1BE6A", "#40B0A6")) +
+  scale_color_manual(values = c("#E1BE6A", "#40B0A6", "#CC6677")) +
   coord_cartesian(ylim = c(0, 3)) +
   theme(
     text = element_text(family = "sans"),
@@ -612,40 +662,41 @@ ggsave(
 )
 
 ggsave(
-  plot = (gg_dem_clim_all_pred_obs + 
-    theme(legend.position = "none")) /
-    (gg_dem_clim_c_pred_obs) +
-    plot_annotation(
-      tag_levels = "A",
-      tag_prefix = "(", tag_suffix = ")") +
-    plot_layout(guides = "collect") & 
+  plot = gg_dem_clim_c_pred_obs +
     theme(
       legend.position = "bottom",
       plot.tag = element_text(face = "bold",
                               size = 9)
       ),
-  here("03-results", "main_figure", "main_plot.png"),
-  width = 9, height = 15,
+  here("03-results", "si_figures", "transition_plot.png"),
+  width = 8, height = 8,
+  unit = "cm",
+  dpi = 600
+)
+
+ggsave(
+  plot = gg_dem_clim_all_pred_obs + 
+    theme(
+      legend.position = "bottom",
+      plot.tag = element_text(face = "bold",
+                              size = 9)
+      ),
+  here("03-results", "main_figure", "main_plot2.png"),
+  width = 9, height = 8,
   unit = "cm",
   dpi = 600
 )
 
 library(svglite)
 ggsave(
-  plot = (gg_dem_clim_all_pred_obs + 
-    theme(legend.position = "none")) /
-    (gg_dem_clim_c_pred_obs) +
-    plot_annotation(
-      tag_levels = "A",
-      tag_prefix = "(", tag_suffix = ")") +
-    plot_layout(guides = "collect") & 
+  plot = gg_dem_clim_all_pred_obs + 
     theme(
       legend.position = "bottom",
       plot.tag = element_text(face = "bold",
                               size = 9)
       ),
   here("03-results", "main_figure", "main_plot.svg"),
-  width = 9, height = 15,
+  width = 9, height = 8,
   unit = "cm",
   dpi = 600
 )
