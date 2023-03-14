@@ -451,15 +451,14 @@ cluster_ifn23 <- fviz_cluster(
   scale_fill_manual(values = myColors)
 cluster_ifn23
 
-# # determining number of clusters
+# determining number of clusters
 # set.seed(123)
 # fviz_nbclust(Psy23_final_long_num_sc, kmeans, method = "wss")
 # 
-# # quality of the cluster
-# set.seed(123)
-# fviz_nbclust(Psy23_final_long_num_sc, kmeans, k.max = 6,
-#              method = "silhouette") +
-#   ggtitle(label = "")
+# ggsave( 
+#   here("03-results", "si_figures", "k_means_elbow.png"),
+#   width = 6, height = 4
+# )
 
 # add the cluster number to the original data
 Psy23_final_long <- Psy23_final_long |>

@@ -259,43 +259,6 @@ summary(zigamma_model_1)
 # the conditional model where a positive contrast 
 # indicates a higher abundance
 
-zigamma_model_2 <- glmmTMB(
-  mort_real ~ k_type * WAIplot + k_type * speimin,
-  family = ziGamma(link = "log"),
-  # we assume that absences will at least vary by:
-  ziformula = ~ k_type * WAIplot * speimin,
-  data = dem_clim
-)
-
-summary(zigamma_model_2)
-
-zigamma_model_3 <- glmmTMB(
-  mort_real ~ WAIplot + k_type * speimin,
-  family = ziGamma(link = "log"),
-  # we assume that absences will at least vary by:
-  ziformula = ~ k_type * WAIplot * speimin,
-  data = dem_clim
-)
-
-summary(zigamma_model_3)
-
-zigamma_model_4 <- glmmTMB(
-  mort_real ~ speimin + k_type * WAIplot,
-  family = ziGamma(link = "log"),
-  # we assume that absences will at least vary by:
-  ziformula = ~ k_type * WAIplot * speimin,
-  data = dem_clim
-)
-
-summary(zigamma_model_4)
-
-bbmle::AICtab(
-  zigamma_model_1,
-  zigamma_model_2,
-  zigamma_model_3,
-  zigamma_model_4
-  )
-
 # https://cran.r-project.org/web/packages/glmmTMB/vignettes/model_evaluation.pdf
 
 ## model checking and diagnostics ------------------------------------------
