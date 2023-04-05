@@ -107,7 +107,7 @@ test_that("NA is natural", {
 })
 ```
 
-    ## Test passed 🥇
+    ## Test passed 🌈
 
 ``` r
 Psy23_planted <- Psy23 |>
@@ -318,7 +318,7 @@ test_that("type2 == type3", {
 })
 ```
 
-    ## Test passed 😸
+    ## Test passed 🎊
 
 ``` r
 Psy23_final <- Psy23_final |> 
@@ -330,7 +330,7 @@ test_that("Plotcode2 == Plotcode3", {
 })
 ```
 
-    ## Test passed 🌈
+    ## Test passed 😀
 
 ``` r
 # map(Psy23_final, ~sum(is.na(.)))
@@ -490,7 +490,7 @@ test_that("Plotcode2 == Plotcode3", {
                })
 ```
 
-    ## Test passed 🥳
+    ## Test passed 🌈
 
 # PCA and clustering: only planted forests
 
@@ -585,7 +585,7 @@ cluster_ifn23
 # fviz_nbclust(Psy23_final_long_num_sc, kmeans, method = "wss")
 # 
 # ggsave( 
-#   here("03-results", "si_figures", "k_means_elbow.png"),
+#   here("03-results", "others", "k_means_elbow.png"),
 #   width = 6, height = 4
 # )
 
@@ -1725,42 +1725,42 @@ gg_mort_ba_ind
 ggsave(
   plot = gg_growth_clorig,
   here("03-results", "si_figures",
-       "s7_growth.png"),
+       "s4_growth.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_str_clorig,
   here("03-results", "si_figures",
-       "s8_str_clorig.png"),
+       "s3_str_clorig.png"),
   width = 10, height = 6
 )
 
 ggsave(
   plot = gg_dbh_mort,
-  here("03-results", "si_figures",
-       "s9_mort_dbh.png"),
+  here("03-results", "others",
+       "mort_dbh.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_ba_mort,
-  here("03-results", "si_figures",
-       "s10_mort_ba.png"),
+  here("03-results", "others",
+       "mort_ba.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_mort_dbh_ind,
-  here("03-results", "si_figures",
-       "s11_mort_dbh_ind.png"),
+  here("03-results", "others",
+       "mort_dbh_ind.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_mort_ba_ind,
-  here("03-results", "si_figures",
-       "s12_mort_ba_ind.png"),
+  here("03-results", "others",
+       "mort_ba_ind.png"),
   width = 6, height = 4
 )
 ```
@@ -1778,7 +1778,7 @@ Session Info
 Sys.time()
 ```
 
-    ## [1] "2023-04-05 12:22:09 CEST"
+    ## [1] "2023-04-05 12:55:49 CEST"
 
 ``` r
 git2r::repository()
@@ -1786,7 +1786,7 @@ git2r::repository()
 
     ## Local:    main C:/Users/julen/OneDrive/Escritorio/GitHub-col/legacies
     ## Remote:   main @ origin (https://github.com/Julenasti/legacies.git)
-    ## Head:     [b96bdda] 2023-03-14: remove unnecesary models
+    ## Head:     [2250859] 2023-04-05: add bigger figures
 
 ``` r
 sessionInfo()

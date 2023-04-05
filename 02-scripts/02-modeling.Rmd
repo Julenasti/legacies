@@ -207,7 +207,7 @@ gg_cor
   
 ggsave(
   plot = gg_cor,
-  here("03-results", "si_figures", "s4_correlations.png"),
+  here("03-results", "others", "correlations.png"),
   width = 3.5, height = 5,
   dpi = 600
 )
@@ -433,7 +433,7 @@ gg_dem_clim_pred
 ggsave(
   plot = map_plot("WAIplot") / map_plot("speimin") +
     plot_annotation(tag_levels = "a"),
-  here("03-results", "si_figures", "s3_wai_spei_distribution.png"),
+  here("03-results", "si_figures", "s5_wai_spei_distribution.png"),
   width = 5, height = 8
 )
 

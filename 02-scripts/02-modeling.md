@@ -355,7 +355,7 @@ gg_cor
 ``` r
 ggsave(
   plot = gg_cor,
-  here("03-results", "si_figures", "s4_correlations.png"),
+  here("03-results", "others", "correlations.png"),
   width = 3.5, height = 5,
   dpi = 600
 )
@@ -774,7 +774,7 @@ gg_dem_clim_pred
 ggsave(
   plot = map_plot("WAIplot") / map_plot("speimin") +
     plot_annotation(tag_levels = "a"),
-  here("03-results", "si_figures", "s3_wai_spei_distribution.png"),
+  here("03-results", "si_figures", "s5_wai_spei_distribution.png"),
   width = 5, height = 8
 )
 
@@ -819,7 +819,7 @@ Session Info
 Sys.time()
 ```
 
-    ## [1] "2023-04-05 12:34:16 CEST"
+    ## [1] "2023-04-05 13:00:12 CEST"
 
 ``` r
 git2r::repository()
@@ -827,7 +827,7 @@ git2r::repository()
 
     ## Local:    main C:/Users/julen/OneDrive/Escritorio/GitHub-col/legacies
     ## Remote:   main @ origin (https://github.com/Julenasti/legacies.git)
-    ## Head:     [b96bdda] 2023-03-14: remove unnecesary models
+    ## Head:     [2250859] 2023-04-05: add bigger figures
 
 ``` r
 sessionInfo()

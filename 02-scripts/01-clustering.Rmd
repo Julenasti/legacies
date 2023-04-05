@@ -465,7 +465,7 @@ cluster_ifn23
 # fviz_nbclust(Psy23_final_long_num_sc, kmeans, method = "wss")
 # 
 # ggsave( 
-#   here("03-results", "si_figures", "k_means_elbow.png"),
+#   here("03-results", "others", "k_means_elbow.png"),
 #   width = 6, height = 4
 # )
 
@@ -1286,42 +1286,42 @@ gg_mort_ba_ind
 ggsave(
   plot = gg_growth_clorig,
   here("03-results", "si_figures",
-       "s7_growth.png"),
+       "s4_growth.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_str_clorig,
   here("03-results", "si_figures",
-       "s8_str_clorig.png"),
+       "s3_str_clorig.png"),
   width = 10, height = 6
 )
 
 ggsave(
   plot = gg_dbh_mort,
-  here("03-results", "si_figures",
-       "s9_mort_dbh.png"),
+  here("03-results", "others",
+       "mort_dbh.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_ba_mort,
-  here("03-results", "si_figures",
-       "s10_mort_ba.png"),
+  here("03-results", "others",
+       "mort_ba.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_mort_dbh_ind,
-  here("03-results", "si_figures",
-       "s11_mort_dbh_ind.png"),
+  here("03-results", "others",
+       "mort_dbh_ind.png"),
   width = 6, height = 4
 )
 
 ggsave(
   plot = gg_mort_ba_ind,
-  here("03-results", "si_figures",
-       "s12_mort_ba_ind.png"),
+  here("03-results", "others",
+       "mort_ba_ind.png"),
   width = 6, height = 4
 )
 ```
