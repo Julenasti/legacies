@@ -24,10 +24,7 @@ library(sf)
 library(viridis)
 library(glmmTMB)
 library(DHARMa)
-library(corrr)
-library(bbmle)
 library(MASS, exclude = "select")
-library(performance)
 library(ggdist)
 library(RColorBrewer)
 library(testthat)
@@ -63,7 +60,6 @@ dem_clim_mort_abs <- dem_clim |>
   summarise(
     mort_abs_type = mean(mort_abs, na.rm = T)
   )
-
 ```
 
 # Exploratory data analyses
@@ -107,8 +103,8 @@ dem_clim_sf <- st_as_sf(x = dem_clim,
                         crs = "+proj=utm +zone=30 +ellps=intl +units=m +no_defs")
 st_crs(dem_clim_sf)
 
-ggplot() + 
-  geom_sf(data = dem_clim_sf)
+# ggplot() + 
+#   geom_sf(data = dem_clim_sf)
 
 # transform to long lat
 dem_clim_sf_map <- st_transform(
@@ -129,7 +125,7 @@ dem_clim_sp_tb <- dem_clim_sf_map |>
 map_plot <- function(col){
   map_loc + 
     geom_point(data = dem_clim_sp_tb,
-               aes(CX, CY, color = .data[[col]]), size = .5, alpha = .8) + 
+               aes(CX, CY, color = .data[[col]]), size = .1, alpha = .8) + 
     scale_color_viridis() +
     xlab("") +
     ylab("") + 
@@ -148,7 +144,7 @@ map_plot <- function(col){
           panel.background = element_blank())
 }
 
-map_plot("WAIplot") + map_plot("speimin")
+map_plot("WAIplot") / map_plot("speimin")
 
 # full data
 gg_mort <- function(x){
@@ -272,15 +268,6 @@ plotQQunif(zigamma_model_simres_1)
 plotResiduals(zigamma_model_simres_1)
 testZeroInflation(zigamma_model_simres_1)
 
-# x11()
-# testDispersion(zigamma_model_simres_1)
-# shows your actual dispersion
-# with a histogram of simulated residuals.
-# Since your value is to the right it indicates
-# that your model has a bit of overdispersion (nothing to worry about)
-# plot(check_predictions(zigamma_model_1)) +
-#  coord_cartesian(xlim = c(0, 0.02))
-
 # testZeroInflation(zigamma_model_simres_1)
 # shows the simulated number
 # of zeroes with your actual number shown as red. 
@@ -335,7 +322,7 @@ arg2_dat_pred <- list(
 dem_clim_new_pred <- arg2_dat_pred |>
   pmap(add_predictions)
 
-length(dem_clim_new_pred)
+# length(dem_clim_new_pred)
 
 names(dem_clim_new_pred) <- c(
   "dem_clim_cc",
@@ -444,10 +431,10 @@ gg_dem_clim_pred
 
 # save plots --------------------------------------------------------------
 ggsave(
-  plot = map_plot("WAIplot") + map_plot("speimin") +
+  plot = map_plot("WAIplot") / map_plot("speimin") +
     plot_annotation(tag_levels = "a"),
   here("03-results", "si_figures", "s3_wai_spei_distribution.png"),
-  width = 12, height = 6
+  width = 5, height = 8
 )
 
 ggsave(

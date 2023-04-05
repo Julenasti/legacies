@@ -95,15 +95,8 @@ planted <- read_tsv(
                    PLOTCODE = col_integer())
 )
 
-names(planted)
-```
+# names(planted)
 
-    ##  [1] "PLOTCODE" "CX"       "CY"       "Aal"      "Api"      "Fsy"     
-    ##  [7] "Pca"      "Pha"      "Pni"      "Ppa"      "Ppe"      "Pra"     
-    ## [13] "Psy"      "Pun"      "Qca"      "Qfa"      "Qhumilis" "Qil"     
-    ## [19] "Qpe"      "Qpy"      "Qro"      "Qsu"      "Pinus_P"
-
-``` r
 dat <- planted |>
   dplyr::select(PLOTCODE, Psy) |>
   mutate(Psy = if_else(is.na(Psy), "A", Psy))
@@ -114,21 +107,15 @@ test_that("NA is natural", {
 })
 ```
 
-    ## Test passed 🌈
+    ## Test passed 🥇
 
 ``` r
 Psy23_planted <- Psy23 |>
   left_join(dat, by = c("Plotcode3" = "PLOTCODE"))
 
 # A = natural
-table(Psy23_planted$Psy, useNA = "always")
-```
+# table(Psy23_planted$Psy, useNA = "always")
 
-    ## 
-    ##     A     P  <NA> 
-    ## 96201 46087     0
-
-``` r
 Psy23_planted <- Psy23_planted |> 
   mutate(
     hdbh2 = h2 * 1000 / dbh2,
@@ -159,12 +146,8 @@ spp2 <- tree23 |>
   group_by(Plotcode2, sppcompa) |>
   summarise(NoTrees2 = length(Plotcode2))
 
-names(spp2)
-```
+# names(spp2)
 
-    ## [1] "Plotcode2" "sppcompa"  "NoTrees2"
-
-``` r
 sppriqueza2 <- spp2 |>
   group_by(Plotcode2) |>
   summarise(Riqueza2 = length(Plotcode2))
@@ -183,12 +166,8 @@ spp3 <- tree23 |>
   group_by(Plotcode3, sppcompa) |>
   summarise(NoTrees3 = length(Plotcode3))
 
-names(spp3)
-```
+# names(spp3)
 
-    ## [1] "Plotcode3" "sppcompa"  "NoTrees3"
-
-``` r
 sppriqueza3 <- spp3 |>
   group_by(Plotcode3) |>
   summarise(Riqueza3 = length(Plotcode3))
@@ -225,80 +204,9 @@ Psy3 <- Psy23_planted |>
             cvh3 = sdh3 / mh3) |>
   dplyr::select(!c(sddbh3, sdh3))
 
-map(Psy2, ~sum(is.na(.)))
-```
+# map(Psy2, ~sum(is.na(.)))
+# map(Psy3, ~sum(is.na(.)))
 
-    ## $Plotcode2
-    ## [1] 1
-    ## 
-    ## $type2
-    ## [1] 0
-    ## 
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $ba_ha2
-    ## [1] 0
-    ## 
-    ## $dens2
-    ## [1] 0
-    ## 
-    ## $mdbh2
-    ## [1] 1
-    ## 
-    ## $mh2
-    ## [1] 1
-    ## 
-    ## $mhdbh2
-    ## [1] 1
-    ## 
-    ## $mqH2
-    ## [1] 1
-    ## 
-    ## $cvdbh2
-    ## [1] 129
-    ## 
-    ## $cvh2
-    ## [1] 129
-
-``` r
-map(Psy3, ~sum(is.na(.)))
-```
-
-    ## $Plotcode3
-    ## [1] 0
-    ## 
-    ## $type3
-    ## [1] 0
-    ## 
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $ba_ha3
-    ## [1] 0
-    ## 
-    ## $dens3
-    ## [1] 0
-    ## 
-    ## $mdbh3
-    ## [1] 57
-    ## 
-    ## $mh3
-    ## [1] 57
-    ## 
-    ## $mhdbh3
-    ## [1] 57
-    ## 
-    ## $mqH3
-    ## [1] 38
-    ## 
-    ## $cvdbh3
-    ## [1] 77
-    ## 
-    ## $cvh3
-    ## [1] 77
-
-``` r
 Psy2 <- Psy2 |> 
   mutate(
     type2 = recode(type2, Planted = "1", Natural = "0")
@@ -378,64 +286,30 @@ Psy2 <- Psy2 |>
 Psy3 <- Psy3 |>
   left_join(pPme3, by = "Plotcode3")
 
-summary(Psy2$Pmedens2)
-```
+# summary(Psy2$Pmedens2)
+# summary(Psy3$Pmedens3)
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   127.3  1655.2  3437.7  3878.5  5602.3 23682.3     422
-
-``` r
-summary(Psy3$Pmedens3)
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   127.3  2037.2  5474.9  6171.0  9231.0 35523.4     591
-
-``` r
 Psy2 <- Psy2 |> 
   mutate(Pmedens2 = replace_na(Pmedens2, 0))
 
 Psy3 <- Psy3 |> 
   mutate(Pmedens3 = replace_na(Pmedens3, 0))
 
-summary(Psy2$Pmedens2)
-```
+# summary(Psy2$Pmedens2)
+# summary(Psy3$Pmedens3)
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##     0.0   763.9  3055.8  3573.6  5347.6 23682.3
-
-``` r
-summary(Psy3$Pmedens3)
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##     0.0   891.3  4583.7  5491.4  8658.0 35523.4
-
-``` r
 Psy23_final <- full_join(Psy2, Psy3, by = "IDPC3")
 
-names(Psy23_final)
-```
+# names(Psy23_final)
 
-    ##  [1] "Plotcode2" "type2"     "IDPC3"     "ba_ha2"    "dens2"     "mdbh2"    
-    ##  [7] "mh2"       "mhdbh2"    "mqH2"      "cvdbh2"    "cvh2"      "Riqueza2" 
-    ## [13] "Pmedens2"  "Plotcode3" "type3"     "ba_ha3"    "dens3"     "mdbh3"    
-    ## [19] "mh3"       "mhdbh3"    "mqH3"      "cvdbh3"    "cvh3"      "Riqueza3" 
-    ## [25] "Pmedens3"
+# nrow(Psy23_final)
 
-``` r
-nrow(Psy23_final)
-```
-
-    ## [1] 5367
-
-``` r
 test_that("sum is number of NA", {
   expect_equal(sum(is.na(Psy23_final$Plotcode2)), 1)
   })
 ```
 
-    ## Test passed 🎉
+    ## Test passed 🌈
 
 ``` r
 test_that("type2 == type3", {
@@ -444,7 +318,7 @@ test_that("type2 == type3", {
 })
 ```
 
-    ## Test passed 🥇
+    ## Test passed 😸
 
 ``` r
 Psy23_final <- Psy23_final |> 
@@ -459,99 +333,12 @@ test_that("Plotcode2 == Plotcode3", {
     ## Test passed 🌈
 
 ``` r
-map(Psy23_final, ~sum(is.na(.)))
-```
+# map(Psy23_final, ~sum(is.na(.)))
 
-    ## $Plotcode2
-    ## [1] 0
-    ## 
-    ## $type2
-    ## [1] 0
-    ## 
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $ba_ha2
-    ## [1] 0
-    ## 
-    ## $dens2
-    ## [1] 0
-    ## 
-    ## $mdbh2
-    ## [1] 0
-    ## 
-    ## $mh2
-    ## [1] 0
-    ## 
-    ## $mhdbh2
-    ## [1] 0
-    ## 
-    ## $mqH2
-    ## [1] 0
-    ## 
-    ## $cvdbh2
-    ## [1] 128
-    ## 
-    ## $cvh2
-    ## [1] 128
-    ## 
-    ## $Riqueza2
-    ## [1] 0
-    ## 
-    ## $Pmedens2
-    ## [1] 0
-    ## 
-    ## $Plotcode3
-    ## [1] 0
-    ## 
-    ## $type3
-    ## [1] 0
-    ## 
-    ## $ba_ha3
-    ## [1] 0
-    ## 
-    ## $dens3
-    ## [1] 0
-    ## 
-    ## $mdbh3
-    ## [1] 57
-    ## 
-    ## $mh3
-    ## [1] 57
-    ## 
-    ## $mhdbh3
-    ## [1] 57
-    ## 
-    ## $mqH3
-    ## [1] 38
-    ## 
-    ## $cvdbh3
-    ## [1] 77
-    ## 
-    ## $cvh3
-    ## [1] 77
-    ## 
-    ## $Riqueza3
-    ## [1] 43
-    ## 
-    ## $Pmedens3
-    ## [1] 0
-
-``` r
-nrow(Psy23_final)
-```
-
-    ## [1] 5366
-
-``` r
+# nrow(Psy23_final)
 Psy23_final <- Psy23_final |>
   drop_na()
-nrow(Psy23_final)
-```
-
-    ## [1] 5163
-
-``` r
+# nrow(Psy23_final)
 table(Psy23_final$type2)
 ```
 
@@ -568,10 +355,10 @@ Psy23_final_ba_long <- Psy23_final |>
       "ba_ha2", "ba_ha3"
     ),
     names_to = "ba_ifn",
-    values_to = "basal_area"
+    values_to = "Basal area"
   ) |> 
   dplyr::select(
-    IDPC3, ba_ifn, basal_area, type2
+    IDPC3, ba_ifn, "Basal area", type2
     )
 Psy23_final_dens_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -580,10 +367,10 @@ Psy23_final_dens_long <- Psy23_final |>
       "dens2", "dens3"
     ),
     names_to = "dens_ifn",
-    values_to = "density"
+    values_to = "Density"
   ) |> 
   dplyr::select(
-    dens_ifn, density
+    dens_ifn, Density
     )
 Psy23_final_mdbh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -592,10 +379,10 @@ Psy23_final_mdbh_long <- Psy23_final |>
       "mdbh2", "mdbh3"
     ),
     names_to = "mdbh_ifn",
-    values_to = "dbh"
+    values_to = "Mean d.b.h."
   ) |> 
   dplyr::select(
-    mdbh_ifn, dbh
+    mdbh_ifn, "Mean d.b.h."
     )
 Psy23_final_mh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -604,10 +391,10 @@ Psy23_final_mh_long <- Psy23_final |>
       "mh2", "mh3"
     ),
     names_to = "mh_ifn",
-    values_to = "height"
+    values_to = "Mean height"
   ) |> 
   dplyr::select(
-    mh_ifn, height
+    mh_ifn, "Mean height"
   )
 Psy23_final_mhdbh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -616,10 +403,10 @@ Psy23_final_mhdbh_long <- Psy23_final |>
       "mhdbh2", "mhdbh3"
     ),
     names_to = "mhdbh_ifn",
-    values_to = "height_dbh"
+    values_to = "Ratio height:d.b.h."
   ) |> 
   dplyr::select(
-    mhdbh_ifn, height_dbh
+    mhdbh_ifn, "Ratio height:d.b.h."
   )
 Psy23_final_cvdbh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -628,10 +415,10 @@ Psy23_final_cvdbh_long <- Psy23_final |>
       "cvdbh2", "cvdbh3"
     ),
     names_to = "cvdbh_ifn",
-    values_to = "cv_dbh"
+    values_to = "CV of d.b.h."
   ) |> 
   dplyr::select(
-    cvdbh_ifn, cv_dbh
+    cvdbh_ifn, "CV of d.b.h."
   )
 Psy23_final_cvh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -640,10 +427,10 @@ Psy23_final_cvh_long <- Psy23_final |>
       "cvh2", "cvh3"
     ),
     names_to = "cvh_ifn",
-    values_to = "cv_height"
+    values_to = "CV of height"
   ) |> 
   dplyr::select(
-    cvh_ifn, cv_height
+    cvh_ifn, "CV of height"
   )
 Psy23_final_Pmedens_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -652,10 +439,10 @@ Psy23_final_Pmedens_long <- Psy23_final |>
       "Pmedens2", "Pmedens3"
     ),
     names_to = "Pmedens_ifn",
-    values_to = "saplings"
+    values_to = "Sapling density"
   ) |> 
   dplyr::select(
-    Pmedens_ifn, saplings
+    Pmedens_ifn, "Sapling density"
   )
 Psy23_final_Riqueza_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -664,10 +451,10 @@ Psy23_final_Riqueza_long <- Psy23_final |>
       "Riqueza2", "Riqueza3"
     ),
     names_to = "Riqueza_ifn",
-    values_to = "sp_richness"
+    values_to = "Species richness"
   ) |> 
   dplyr::select(
-    Riqueza_ifn, sp_richness
+    Riqueza_ifn, "Species richness"
   )
 Psy23_final_mqH_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -676,10 +463,10 @@ Psy23_final_mqH_long <- Psy23_final |>
       "mqH2", "mqH3"
     ),
     names_to = "mqH_ifn",
-    values_to = "tree_vigour"
+    values_to = "Tree vigour"
   ) |> 
   dplyr::select(
-    mqH_ifn, tree_vigour
+    mqH_ifn, "Tree vigour"
   )
 
 Psy23_final_long <- bind_cols(
@@ -708,16 +495,8 @@ test_that("Plotcode2 == Plotcode3", {
 # PCA and clustering: only planted forests
 
 ``` r
-names(Psy23_final_long)
-```
+# names(Psy23_final_long)
 
-    ##  [1] "IDPC3"       "ba_ifn"      "basal_area"  "type2"       "dens_ifn"   
-    ##  [6] "density"     "mdbh_ifn"    "dbh"         "mh_ifn"      "height"     
-    ## [11] "mhdbh_ifn"   "height_dbh"  "cvdbh_ifn"   "cv_dbh"      "cvh_ifn"    
-    ## [16] "cv_height"   "Pmedens_ifn" "saplings"    "Riqueza_ifn" "sp_richness"
-    ## [21] "mqH_ifn"     "tree_vigour"
-
-``` r
 # type = 1 is planted
 Psy23_final_long <- Psy23_final_long |> 
   mutate(
@@ -750,16 +529,16 @@ glimpse(Psy23_final_long_num)
 
     ## Rows: 10,324
     ## Columns: 10
-    ## $ basal_area  <dbl> 4.409798, 6.123150, 14.924834, 19.390306, 22.244708, 15.46…
-    ## $ density     <dbl> 74.27231, 84.88264, 247.57436, 263.27764, 640.15655, 477.4…
-    ## $ dbh         <dbl> 290.7500, 299.5000, 284.6000, 313.4167, 223.2759, 213.0000…
-    ## $ height      <dbl> 10.125000, 12.333333, 13.700000, 15.250000, 15.034483, 14.…
-    ## $ height_dbh  <dbl> 36.26612, 42.10745, 49.96737, 50.36489, 70.87539, 71.35980…
-    ## $ cv_dbh      <dbl> 0.31343216, 0.16947663, 0.21566813, 0.21478268, 0.28037706…
-    ## $ cv_height   <dbl> 0.28043992, 0.15943655, 0.13780523, 0.12280609, 0.16071099…
-    ## $ saplings    <dbl> 2291.8312, 6238.8738, 2291.8312, 1273.2395, 4710.9863, 241…
-    ## $ sp_richness <int> 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 5, 2, 2, 1, 1, 2, 2, 2, 2…
-    ## $ tree_vigour <dbl> 2.000000, 2.000000, 2.000000, 3.368421, 2.068966, 2.100000…
+    ## $ `Basal area`          <dbl> 4.409798, 6.123150, 14.924834, 19.390306, 22.244…
+    ## $ Density               <dbl> 74.27231, 84.88264, 247.57436, 263.27764, 640.15…
+    ## $ `Mean d.b.h.`         <dbl> 290.7500, 299.5000, 284.6000, 313.4167, 223.2759…
+    ## $ `Mean height`         <dbl> 10.125000, 12.333333, 13.700000, 15.250000, 15.0…
+    ## $ `Ratio height:d.b.h.` <dbl> 36.26612, 42.10745, 49.96737, 50.36489, 70.87539…
+    ## $ `CV of d.b.h.`        <dbl> 0.31343216, 0.16947663, 0.21566813, 0.21478268, …
+    ## $ `CV of height`        <dbl> 0.28043992, 0.15943655, 0.13780523, 0.12280609, …
+    ## $ `Sapling density`     <dbl> 2291.8312, 6238.8738, 2291.8312, 1273.2395, 4710…
+    ## $ `Species richness`    <int> 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 5, 2, 2, 1, 1, …
+    ## $ `Tree vigour`         <dbl> 2.000000, 2.000000, 2.000000, 3.368421, 2.068966…
 
 ``` r
 pca_Psy <- prcomp(Psy23_final_long_num, scale = TRUE)
@@ -783,24 +562,32 @@ cluster_ifn23 <- fviz_cluster(
   k3, data = Psy23_final_long_num_sc,
   geom = "point"
   ) + 
-  ggtitle(label = '') +
-  scale_color_manual(values = myColors) +
-  scale_fill_manual(values = myColors)
+  ggtitle(label = "") +
+  scale_color_manual(name = "Cluster",
+                     values = myColors, 
+                    labels = c("C1", "C2")) +
+  scale_fill_manual(name = "Cluster",
+                    values = myColors, 
+                    labels = c("C1", "C2")) +
+  scale_shape_manual(name = "Cluster",
+                     values = c(19, 17),
+                     labels = c("C1", "C2")) +
+  scale_x_continuous(name = "Axis 1 (24.8%)") +
+  scale_y_continuous(name = "Axis 2 (20.1%)")
 cluster_ifn23
 ```
 
 ![](01-clustering_files/figure-gfm/cluster-1.png)<!-- -->
 
 ``` r
-# # determining number of clusters
+# determining number of clusters
 # set.seed(123)
 # fviz_nbclust(Psy23_final_long_num_sc, kmeans, method = "wss")
 # 
-# # quality of the cluster
-# set.seed(123)
-# fviz_nbclust(Psy23_final_long_num_sc, kmeans, k.max = 6,
-#              method = "silhouette") +
-#   ggtitle(label = "")
+# ggsave( 
+#   here("03-results", "si_figures", "k_means_elbow.png"),
+#   width = 6, height = 4
+# )
 
 # add the cluster number to the original data
 Psy23_final_long <- Psy23_final_long |>
@@ -815,27 +602,142 @@ table(Psy23_final_long$k3)
     ## 6365 3959
 
 ``` r
-names(Psy23_final_long)
-```
+# names(Psy23_final_long)
 
-    ##  [1] "IDPC3"       "ba_ifn"      "basal_area"  "type2"       "dens_ifn"   
-    ##  [6] "density"     "mdbh_ifn"    "dbh"         "mh_ifn"      "height"     
-    ## [11] "mhdbh_ifn"   "height_dbh"  "cvdbh_ifn"   "cv_dbh"      "cvh_ifn"    
-    ## [16] "cv_height"   "Pmedens_ifn" "saplings"    "Riqueza_ifn" "sp_richness"
-    ## [21] "mqH_ifn"     "tree_vigour" "k3"
-
-``` r
 # for the contingency table
 Psy23_final_long_k <- Psy23_final_long
 
+# statistical test
+Psy23_final_long$k3 <- as.factor(Psy23_final_long$k3)
+levels(Psy23_final_long$k3)
+```
+
+    ## [1] "1" "2"
+
+``` r
+wilcox.test(`Basal area` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Basal area by k3
+    ## W = 1571155, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(Density ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Density by k3
+    ## W = 4763948, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`Mean d.b.h.` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Mean d.b.h. by k3
+    ## W = 11675592, p-value = 3.504e-10
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`Mean height` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Mean height by k3
+    ## W = 5572396, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`Ratio height:d.b.h.` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Ratio height:d.b.h. by k3
+    ## W = 3544152, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`CV of d.b.h.` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  CV of d.b.h. by k3
+    ## W = 14700723, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`CV of height` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  CV of height by k3
+    ## W = 17912583, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`Sapling density` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Sapling density by k3
+    ## W = 16428911, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`Species richness` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Species richness by k3
+    ## W = 14590740, p-value < 2.2e-16
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox.test(`Tree vigour` ~ k3, data = Psy23_final_long)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  Tree vigour by k3
+    ## W = 13759223, p-value = 1.363e-15
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
 allPsy23 <- Psy23_final_long |>
    pivot_longer(
     cols = c(
-      basal_area,
-      density, dbh, height,
-      height_dbh, cv_dbh, cv_height,
-      saplings, sp_richness,
-      tree_vigour
+      "Basal area",
+      Density,
+      "Mean d.b.h.",
+      "Mean height",
+      "Ratio height:d.b.h.",
+      "CV of d.b.h.",
+      "CV of height",
+      "Sapling density",
+      "Species richness",
+      "Tree vigour"
     ),
     names_to = "structure",
     values_to = "str_value"
@@ -849,13 +751,16 @@ gg_str <- function(data, k){
                    fill = as.character(.data[[k]]))) +
     geom_boxplot(outlier.size = 0.2, width = 0.5) +
     labs(x = "", title = "", y = "")  +
-    scale_fill_manual(name = "cluster", values = myColors) +
+    scale_fill_manual(name = "Cluster", values = myColors,
+                      labels = c("C1", "C2")) +
     facet_wrap(~structure, scale = "free",
-               strip.position = "bottom") +
-    ylab("Structure") +
+               strip.position = "left") +
+    ylab("") +
     theme(
-      axis.text = element_text(colour = "grey50", size = 10),
-      axis.title = element_text(colour = "grey50", size = 12),
+      strip.background = element_blank(),
+      strip.text = element_text(colour = "grey50", size = 10),
+      axis.text.y = element_text(colour = "grey50", size = 10),
+      axis.text.x = element_blank(),
       panel.grid.major = element_line(colour = "grey90", size = 0.5), 
       panel.background = element_blank(),
       legend.key = element_blank(),
@@ -875,7 +780,8 @@ plot_str
 plot_str_plan_nat <- gg_str(data = allPsy23,
                    k = "type2") +
   scale_color_manual(values = c("#F8766D", "#619CFF")) +
-  scale_fill_manual(values = c("#F8766D", "#619CFF"))
+  scale_fill_manual(name = "Stand origin", 
+                    values = c("#F8766D", "#619CFF"))
 plot_str_plan_nat
 ```
 
@@ -888,13 +794,16 @@ ggsave(
   width = 10, height = 8
 )
 
-plot_PCA <- PCAPsy + theme(
-  legend.title = element_blank(),
-  text = element_text(colour = "grey50", size = 12),
-  panel.grid.minor = element_blank(),
-  axis.text = element_text(colour = "grey50", size = 10),
-  axis.title = element_text(colour = "grey50", size = 12),
-  axis.ticks = element_blank()
+plot_PCA <- PCAPsy +
+  scale_x_continuous(name = "Axis 1 (24.8%)") +
+  scale_y_continuous(name = "Axis 2 (20.1%)") +
+  theme(
+    legend.title = element_blank(),
+    text = element_text(colour = "grey50", size = 12),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    axis.ticks = element_blank()
 )
 plot_PCA
 ```
@@ -918,36 +827,8 @@ plot_cluster
 # Demography (2nd & 3rd forest inventory (ifn23)
 
 ``` r
-names(Psy23_planted)
-```
+# names(Psy23_planted)
 
-    ##  [1] "ID_Pma3"           "ID_Pma3c"          "ID_Pma2"          
-    ##  [4] "IDPC3"             "IDPCc3"            "Plotcode3"        
-    ##  [7] "Plotcode2"         "Provincia3"        "Cla3"             
-    ## [10] "Subclase3"         "Orden33"           "Orden23"          
-    ## [13] "rumbo32"           "distancia32"       "state3"           
-    ## [16] "R2"                "R3"                "sppcompa"         
-    ## [19] "Especie2"          "Nombre2"           "genero2"          
-    ## [22] "Especie3"          "Nombre3"           "genero3"          
-    ## [25] "sp_err23"          "sp_mixsp23"        "sp_spmix23"       
-    ## [28] "cod_change23"      "intragen_23"       "intergen_23"      
-    ## [31] "dbh2"              "dbh3"              "h2"               
-    ## [34] "h3"                "dens2"             "dens3"            
-    ## [37] "AB2"               "AB3"               "AB2m2ha"          
-    ## [40] "AB3m2ha"           "AB32"              "AB32ha"           
-    ## [43] "AB2m2ha_muertosc"  "AB2m2ha_presente"  "AB2m2ha_ausente"  
-    ## [46] "reclutamiento32"   "reclutamiento32_5" "Agente3"          
-    ## [49] "Importancia3"      "Elemento3"         "Calidad3"         
-    ## [52] "Calidad2"          "Forma3"            "Forma2"           
-    ## [55] "Paramesp3"         "Paramesp2"         "VCCha3"           
-    ## [58] "VCCha2"            "VSCha3"            "VSCha2"           
-    ## [61] "IAVCha3"           "IAVCha2"           "VLEha3"           
-    ## [64] "VLEha2"            "Error23"           "Error3"           
-    ## [67] "Error2"            "AB2m2ha.tot.plot"  "AB2m2ha.plot"     
-    ## [70] "AB2m2ha.rel.plot"  "ntrees"            "Psy"              
-    ## [73] "hdbh2"             "hdbh3"
-
-``` r
 # for the dbh of dead treees
 Psy23_planted_m <- Psy23_planted
 
@@ -1040,40 +921,16 @@ plot_dem23 <- plot23 |>
     !c(BAc, Ingrowth, Growth, Mortality, Mortality_nd, Mortality_ausente)
   )
 
-names(plot_dem23)
-```
+# names(plot_dem23)
 
-    ##  [1] "IDPC3"               "Plotcode3"           "year32"             
-    ##  [4] "Cut32"               "type2"               "ba_ifn2"            
-    ##  [7] "BAc23"               "Ingrowth23"          "Growth23"           
-    ## [10] "Mortality23"         "Mortality23_nd"      "Mortality_ausente23"
-
-``` r
 Psy_dem23 <- plot_dem23
 
-nrow(Psy_dem23)
-```
+# nrow(Psy_dem23)
 
-    ## [1] 5328
-
-``` r
 # planted ifn 23
-nrow(Psy23_final)
-```
+# nrow(Psy23_final)
+# names(Psy23_final)
 
-    ## [1] 5163
-
-``` r
-names(Psy23_final)
-```
-
-    ##  [1] "Plotcode2" "type2"     "IDPC3"     "ba_ha2"    "dens2"     "mdbh2"    
-    ##  [7] "mh2"       "mhdbh2"    "mqH2"      "cvdbh2"    "cvh2"      "Riqueza2" 
-    ## [13] "Pmedens2"  "Plotcode3" "type3"     "ba_ha3"    "dens3"     "mdbh3"    
-    ## [19] "mh3"       "mhdbh3"    "mqH3"      "cvdbh3"    "cvh3"      "Riqueza3" 
-    ## [25] "Pmedens3"
-
-``` r
 table(Psy_dem23$type2, useNA = "always")
 ```
 
@@ -1087,7 +944,7 @@ Psy23_final_long <- Psy23_final_long |>
   distinct(IDPC3, .keep_all = T)
 
 # there are some plots with NA in the planted and natural cluster
-# because they only contain one LIVE tree. I deleted them
+# because they only contain one ALIVE tree. I deleted them
 # kk <- Psy23_planted |>
 #   filter(
 #   IDPC3 == "10913A1" | IDPC3 == "10634A1"
@@ -1098,135 +955,12 @@ Psy_dem23 <- Psy_dem23 |>
   left_join(Psy23_final_long,
             by = "IDPC3")
 
-nrow(Psy_dem23)
-```
+# nrow(Psy_dem23)
+# 
+# map(Psy_dem23, ~sum(is.na(.)))
+# 
+# names(Psy_dem23)
 
-    ## [1] 5328
-
-``` r
-map(Psy_dem23, ~sum(is.na(.)))
-```
-
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $Plotcode3
-    ## [1] 0
-    ## 
-    ## $year32
-    ## [1] 0
-    ## 
-    ## $Cut32
-    ## [1] 0
-    ## 
-    ## $type2.x
-    ## [1] 0
-    ## 
-    ## $ba_ifn2
-    ## [1] 0
-    ## 
-    ## $BAc23
-    ## [1] 0
-    ## 
-    ## $Ingrowth23
-    ## [1] 0
-    ## 
-    ## $Growth23
-    ## [1] 0
-    ## 
-    ## $Mortality23
-    ## [1] 0
-    ## 
-    ## $Mortality23_nd
-    ## [1] 0
-    ## 
-    ## $Mortality_ausente23
-    ## [1] 0
-    ## 
-    ## $ba_ifn
-    ## [1] 166
-    ## 
-    ## $basal_area
-    ## [1] 166
-    ## 
-    ## $type2.y
-    ## [1] 166
-    ## 
-    ## $dens_ifn
-    ## [1] 166
-    ## 
-    ## $density
-    ## [1] 166
-    ## 
-    ## $mdbh_ifn
-    ## [1] 166
-    ## 
-    ## $dbh
-    ## [1] 166
-    ## 
-    ## $mh_ifn
-    ## [1] 166
-    ## 
-    ## $height
-    ## [1] 166
-    ## 
-    ## $mhdbh_ifn
-    ## [1] 166
-    ## 
-    ## $height_dbh
-    ## [1] 166
-    ## 
-    ## $cvdbh_ifn
-    ## [1] 166
-    ## 
-    ## $cv_dbh
-    ## [1] 166
-    ## 
-    ## $cvh_ifn
-    ## [1] 166
-    ## 
-    ## $cv_height
-    ## [1] 166
-    ## 
-    ## $Pmedens_ifn
-    ## [1] 166
-    ## 
-    ## $saplings
-    ## [1] 166
-    ## 
-    ## $Riqueza_ifn
-    ## [1] 166
-    ## 
-    ## $sp_richness
-    ## [1] 166
-    ## 
-    ## $mqH_ifn
-    ## [1] 166
-    ## 
-    ## $tree_vigour
-    ## [1] 166
-    ## 
-    ## $k3
-    ## [1] 166
-
-``` r
-names(Psy_dem23)
-```
-
-    ##  [1] "IDPC3"               "Plotcode3"           "year32"             
-    ##  [4] "Cut32"               "type2.x"             "ba_ifn2"            
-    ##  [7] "BAc23"               "Ingrowth23"          "Growth23"           
-    ## [10] "Mortality23"         "Mortality23_nd"      "Mortality_ausente23"
-    ## [13] "ba_ifn"              "basal_area"          "type2.y"            
-    ## [16] "dens_ifn"            "density"             "mdbh_ifn"           
-    ## [19] "dbh"                 "mh_ifn"              "height"             
-    ## [22] "mhdbh_ifn"           "height_dbh"          "cvdbh_ifn"          
-    ## [25] "cv_dbh"              "cvh_ifn"             "cv_height"          
-    ## [28] "Pmedens_ifn"         "saplings"            "Riqueza_ifn"        
-    ## [31] "sp_richness"         "mqH_ifn"             "tree_vigour"        
-    ## [34] "k3"
-
-``` r
 Psy_dem23_sel <- Psy_dem23 |>
   dplyr::select(
     IDPC3,
@@ -1272,13 +1006,14 @@ gg_dem <- function(k){
     geom_boxplot(outlier.shape = NA) +
     labs(x = "", title = "", y = "Demography")  +
     scale_color_manual(values = myColors) +
-    scale_fill_manual(values = myColors) +
+    scale_fill_manual(name = "Cluster",
+                      labels = c("C1", "C2"),
+                      values = myColors) +
     facet_wrap2(
       ~type2.x, strip = col_strips
       ) +
     coord_cartesian(ylim = c(0.0, 0.25)) +
     theme(
-      legend.title = element_blank(),
       axis.title.x = element_blank(),
       axis.text = element_text(colour = "grey50", size = 10),
       axis.title = element_text(colour = "grey50", size = 12),
@@ -1301,32 +1036,13 @@ ggsave(
   width = 10, height = 8
 )
 
-summary(Psy_dem23_sel_lon |> 
-  filter(type2.x == "Planted" & demography == "Ingrowth23") |> 
-    select(dem_value))
+# summary(Psy_dem23_sel_lon |> 
+#   filter(type2.x == "Planted" & demography == "Ingrowth23") |> 
+#     select(dem_value))
+# summary(Psy_dem23_sel_lon |> 
+#   filter(type2.x == "Natural" & demography == "Ingrowth23") |> 
+#     select(dem_value))
 ```
-
-    ##    dem_value       
-    ##  Min.   :0.000000  
-    ##  1st Qu.:0.000000  
-    ##  Median :0.000000  
-    ##  Mean   :0.012748  
-    ##  3rd Qu.:0.004254  
-    ##  Max.   :0.859408
-
-``` r
-summary(Psy_dem23_sel_lon |> 
-  filter(type2.x == "Natural" & demography == "Ingrowth23") |> 
-    select(dem_value))
-```
-
-    ##    dem_value       
-    ##  Min.   :0.000000  
-    ##  1st Qu.:0.000000  
-    ##  Median :0.000000  
-    ##  Mean   :0.005991  
-    ##  3rd Qu.:0.003577  
-    ##  Max.   :0.446939
 
 # Legacies map
 
@@ -1413,13 +1129,9 @@ st_crs(cPsy_sf)
     ##                 ID["EPSG",9001]]]]
 
 ``` r
-ggplot() + 
-  geom_sf(data = cPsy_sf)
-```
+# ggplot() + 
+#   geom_sf(data = cPsy_sf)
 
-![](01-clustering_files/figure-gfm/map-legacies-1.png)<!-- -->
-
-``` r
 cPsy_sf_map <- st_transform(
   cPsy_sf,
   "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
@@ -1462,8 +1174,13 @@ map_plots <- function(col.var){
     geom_point(data = cPsy_sp_tb,
                aes(CX, CY, color = as.factor(.data[[col.var]]),
                    shape = as.factor(.data[[col.var]])),
-               size = .5) + 
-    scale_color_manual(values = myColors, name = "cluster") +
+               ) + 
+    scale_color_manual(values = myColors, 
+                       name = "Cluster",
+                       labels = c("C1", "C2")) +
+    scale_shape_manual(values = c(19, 17),
+                       labels = c("C1", "C2"),
+                       name = "Cluster") +
     xlab("") +
     ylab("") + 
     guides(colour = guide_legend(override.aes = list(size = 5))) +
@@ -1481,57 +1198,76 @@ map_plots <- function(col.var){
           panel.background = element_blank())
 }
 
-map_cluster <- map_plots(col.var = "k3") +
-  scale_shape_manual(values = c(19, 17), name = "cluster")
+map_cluster <- map_plots(col.var = "k3")
 map_cluster
 ```
 
-![](01-clustering_files/figure-gfm/map-legacies-2.png)<!-- -->
+![](01-clustering_files/figure-gfm/map-legacies-1.png)<!-- -->
 
 ``` r
 map_planted <- map_plots(col.var = "type2.x") +
   scale_color_manual(
     limits = c("Natural", "Planted"),
-    labels = c("natural", "planted"),
+    labels = c("Natural", "Planted"),
     values = c("#F8766D", "#00BFC4"),
-    name = "cluster"
+    name = "Cluster"
     ) +
   scale_shape_manual(
     limits = c("Natural", "Planted"),
-    labels = c("natural", "planted"),
+    labels = c("Natural", "Planted"),
     values = c(19, 17),
-    name = "cluster"
+    name = "Cluster"
     )
 map_planted
+```
+
+![](01-clustering_files/figure-gfm/map-legacies-2.png)<!-- -->
+
+``` r
+# save paper plots --------------------------------------------------------
+(plot_PCA + theme(legend.position = "none")) / map_planted +
+  plot_annotation(tag_levels = "a")
 ```
 
 ![](01-clustering_files/figure-gfm/map-legacies-3.png)<!-- -->
 
 ``` r
-# save paper plots --------------------------------------------------------
-plot_PCA + theme(legend.position = "none") + map_planted +
-  plot_annotation(tag_levels = "a")
+ggsave(
+  here("03-results", "si_figures", "s1_psy_plan_nat.png"),
+  width = 6, height = 8
+)
+
+plot_cluster + plot_annotation(tag_levels = "a")
 ```
 
 ![](01-clustering_files/figure-gfm/map-legacies-4.png)<!-- -->
 
 ``` r
 ggsave(
-  here("03-results", "si_figures", "s1_psy_plan_nat.png"),
-  width = 16, height = 8
+  here("03-results", "si_figures", "s2_psy_cluster1.png"),
+  width = 6, height = 5
 )
 
-(plot_cluster + plot_str) /
-  (map_cluster + plot_spacer()) +
-  plot_annotation(tag_levels = "a")
+plot_str + plot_annotation(tag_levels = list("b"))
 ```
 
 ![](01-clustering_files/figure-gfm/map-legacies-5.png)<!-- -->
 
 ``` r
 ggsave(
-  here("03-results", "si_figures", "s2_psy_cluster.png"),
-  width = 18, height = 10
+  here("03-results", "si_figures", "s2_psy_cluster2.png"),
+  width = 10, height = 6
+)
+
+map_cluster + plot_annotation(tag_levels = list("c"))
+```
+
+![](01-clustering_files/figure-gfm/map-legacies-6.png)<!-- -->
+
+``` r
+ggsave(
+  here("03-results", "si_figures", "s2_psy_cluster3.png"),
+  width = 6, height = 5
 )
 ```
 
@@ -1544,93 +1280,17 @@ clima <- read_csv(here("01-data", "climate", "completeclimate.csv")) |>
 # remove duplicated plots
 clima <- clima |> 
   distinct(IDPC, .keep_all = T)
-nrow(clima)
-```
+# nrow(clima)
 
-    ## [1] 58819
-
-``` r
 dem_clim <- left_join(
   Psy_dem23_sel, clima, by = c("IDPC3" = "IDPC")
   )
-nrow(dem_clim)
-```
+# nrow(dem_clim)
+# 
+# map(dem_clim, ~sum(is.na(.)))
+# 
+# table(dem_clim$k3)
 
-    ## [1] 5162
-
-``` r
-map(dem_clim, ~sum(is.na(.)))
-```
-
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $Ingrowth23
-    ## [1] 0
-    ## 
-    ## $Growth23
-    ## [1] 0
-    ## 
-    ## $Mortality23
-    ## [1] 0
-    ## 
-    ## $Mortality23_nd
-    ## [1] 0
-    ## 
-    ## $Mortality_ausente23
-    ## [1] 0
-    ## 
-    ## $BAc23
-    ## [1] 0
-    ## 
-    ## $ba_ifn2
-    ## [1] 0
-    ## 
-    ## $k3
-    ## [1] 0
-    ## 
-    ## $type2.x
-    ## [1] 0
-    ## 
-    ## $Cut32
-    ## [1] 0
-    ## 
-    ## $CX
-    ## [1] 351
-    ## 
-    ## $CY
-    ## [1] 351
-    ## 
-    ## $sf_nfi
-    ## [1] 351
-    ## 
-    ## $sgdd_nfi
-    ## [1] 351
-    ## 
-    ## $PPplot
-    ## [1] 351
-    ## 
-    ## $PETplot
-    ## [1] 351
-    ## 
-    ## $WAIplot
-    ## [1] 351
-    ## 
-    ## $speimean
-    ## [1] 351
-    ## 
-    ## $speimin
-    ## [1] 351
-
-``` r
-table(dem_clim$k3)
-```
-
-    ## 
-    ##    1    2 
-    ## 3430 1732
-
-``` r
 dem_clim_final <- dem_clim |> 
   dplyr::select(
     IDPC3, CX, CY,
@@ -1645,7 +1305,7 @@ glimpse(dem_clim_final)
     ## $ IDPC3               <chr> "100303A1", "10067A1", "100773A1", "100775A1", "10…
     ## $ CX                  <dbl> 262000, 490000, 263000, 263000, 262000, 258000, 49…
     ## $ CY                  <dbl> 4470000, 4774000, 4468000, 4467000, 4463000, 44590…
-    ## $ k3                  <int> 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 2, 1, 2, 1,…
+    ## $ k3                  <fct> 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 2, 1, 2, 1,…
     ## $ type2.x             <fct> Planted, Planted, Planted, Planted, Planted, Plant…
     ## $ Cut32               <dbl> 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1,…
     ## $ Ingrowth23          <dbl> 0.15401126, 0.00000000, 0.00368975, 0.00000000, 0.…
@@ -1664,70 +1324,8 @@ glimpse(dem_clim_final)
     ## $ speimin             <dbl> -1.713884, -1.885054, -1.713884, -1.713884, -1.713…
 
 ``` r
-map(dem_clim_final, ~sum(is.na(.)))
-```
+# map(dem_clim_final, ~sum(is.na(.)))
 
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $CX
-    ## [1] 351
-    ## 
-    ## $CY
-    ## [1] 351
-    ## 
-    ## $k3
-    ## [1] 0
-    ## 
-    ## $type2.x
-    ## [1] 0
-    ## 
-    ## $Cut32
-    ## [1] 0
-    ## 
-    ## $Ingrowth23
-    ## [1] 0
-    ## 
-    ## $Growth23
-    ## [1] 0
-    ## 
-    ## $Mortality23
-    ## [1] 0
-    ## 
-    ## $Mortality23_nd
-    ## [1] 0
-    ## 
-    ## $Mortality_ausente23
-    ## [1] 0
-    ## 
-    ## $BAc23
-    ## [1] 0
-    ## 
-    ## $ba_ifn2
-    ## [1] 0
-    ## 
-    ## $sf_nfi
-    ## [1] 351
-    ## 
-    ## $sgdd_nfi
-    ## [1] 351
-    ## 
-    ## $PPplot
-    ## [1] 351
-    ## 
-    ## $PETplot
-    ## [1] 351
-    ## 
-    ## $WAIplot
-    ## [1] 351
-    ## 
-    ## $speimean
-    ## [1] 351
-    ## 
-    ## $speimin
-    ## [1] 351
-
-``` r
 # delete 3C plot types
 dem_clim_final <- dem_clim_final |> 
   drop_na(
@@ -1737,70 +1335,8 @@ dem_clim_final <- dem_clim_final |>
     WAIplot, speimean, speimin
     )
 
-map(dem_clim_final, ~sum(is.na(.)))
-```
+# map(dem_clim_final, ~sum(is.na(.)))
 
-    ## $IDPC3
-    ## [1] 0
-    ## 
-    ## $CX
-    ## [1] 0
-    ## 
-    ## $CY
-    ## [1] 0
-    ## 
-    ## $k3
-    ## [1] 0
-    ## 
-    ## $type2.x
-    ## [1] 0
-    ## 
-    ## $Cut32
-    ## [1] 0
-    ## 
-    ## $Ingrowth23
-    ## [1] 0
-    ## 
-    ## $Growth23
-    ## [1] 0
-    ## 
-    ## $Mortality23
-    ## [1] 0
-    ## 
-    ## $Mortality23_nd
-    ## [1] 0
-    ## 
-    ## $Mortality_ausente23
-    ## [1] 0
-    ## 
-    ## $BAc23
-    ## [1] 0
-    ## 
-    ## $ba_ifn2
-    ## [1] 0
-    ## 
-    ## $sf_nfi
-    ## [1] 0
-    ## 
-    ## $sgdd_nfi
-    ## [1] 0
-    ## 
-    ## $PPplot
-    ## [1] 0
-    ## 
-    ## $PETplot
-    ## [1] 0
-    ## 
-    ## $WAIplot
-    ## [1] 0
-    ## 
-    ## $speimean
-    ## [1] 0
-    ## 
-    ## $speimin
-    ## [1] 0
-
-``` r
 write_csv(dem_clim_final, here("01-data", "legacies", "dem_clim_ps_cut.csv"))
 ```
 
@@ -1885,29 +1421,10 @@ dem_clim <- read_csv(
   here("01-data", "legacies", "dem_clim_ps_cut.csv")
 )
 
-table(dem_clim$k3)
-```
+# table(dem_clim$k3)
+# table(dem_clim$type2.x)
+# summary(dem_clim$Mortality23)
 
-    ## 
-    ##    1    2 
-    ## 3173 1638
-
-``` r
-table(dem_clim$type2.x)
-```
-
-    ## 
-    ## Natural Planted 
-    ##    3519    1292
-
-``` r
-summary(dem_clim$Mortality23)
-```
-
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.000000 0.000000 0.000000 0.002400 0.002289 0.090909
-
-``` r
 dem_clim <- dem_clim |> 
   unite("k_type", k3:type2.x) |> 
   mutate(
@@ -1978,11 +1495,16 @@ test_that("nrow is correct", {
 dem_clim_str23_l <- dem_clim_str23 |>
   pivot_longer(
     cols = c(
-      basal_area,
-      density, dbh, height,
-      height_dbh, cv_dbh, cv_height,
-      saplings, sp_richness,
-      tree_vigour
+      "Basal area",
+      Density,
+      "Mean d.b.h.",
+      "Mean height",
+      "Ratio height:d.b.h.",
+      "CV of d.b.h.",
+      "CV of height",
+      "Sapling density",
+      "Species richness",
+      "Tree vigour"
     ),
     names_to = "structure",
     values_to = "str_value"
@@ -2007,22 +1529,24 @@ gg_str_clorig <- dem_clim_str23_l |>
   labs(x = "", title = "", y = "")  +
   scale_fill_manual(name = "", values = myColors) +
   facet_wrap(~structure, scale = "free",
-             strip.position = "bottom") +
-  ylab("Structure") +
+             strip.position = "left") +
+  ylab("") +
   theme(
-    axis.text = element_text(colour = "grey50", size = 10),
     axis.title = element_text(colour = "grey50", size = 12),
     panel.grid.major = element_line(colour = "grey90", size = 0.5), 
     panel.background = element_blank(),
     legend.key = element_blank(),
-    strip.text.x = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(colour = "grey50", size = 10),
+    axis.text.y = element_text(colour = "grey50", size = 10),
+    axis.text.x = element_blank(),
     axis.ticks = element_blank()
   )
 
 # dbh of plots with dead trees
 gg_dbh_mort <- dem_clim_str23_l |> 
   filter(mort_real > 0 & 
-           structure == "dbh") |> 
+           structure == "Mean d.b.h.") |> 
   mutate(
     k_type = recode_factor(
       k_type, 
@@ -2059,7 +1583,7 @@ gg_dbh_mort
 # basal area of plots with dead trees
 gg_ba_mort <- dem_clim_str23_l |> 
   filter(mort_real > 0 & 
-           structure == "basal_area") |> 
+           structure == "Basal area") |> 
   mutate(
     k_type = recode_factor(
       k_type, 
@@ -2209,7 +1733,7 @@ ggsave(
   plot = gg_str_clorig,
   here("03-results", "si_figures",
        "s8_str_clorig.png"),
-  width = 14, height = 6
+  width = 10, height = 6
 )
 
 ggsave(
@@ -2254,7 +1778,7 @@ Session Info
 Sys.time()
 ```
 
-    ## [1] "2022-07-29 12:57:58 CEST"
+    ## [1] "2023-04-05 12:22:09 CEST"
 
 ``` r
 git2r::repository()
@@ -2262,13 +1786,13 @@ git2r::repository()
 
     ## Local:    main C:/Users/julen/OneDrive/Escritorio/GitHub-col/legacies
     ## Remote:   main @ origin (https://github.com/Julenasti/legacies.git)
-    ## Head:     [eb2fa0c] 2022-07-29: update summary psy
+    ## Head:     [b96bdda] 2023-03-14: remove unnecesary models
 
 ``` r
 sessionInfo()
 ```
 
-    ## R version 4.2.1 (2022-06-23 ucrt)
+    ## R version 4.2.2 (2022-10-31 ucrt)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
     ## Running under: Windows 10 x64 (build 19044)
     ## 
@@ -2285,33 +1809,42 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] gt_0.6.0           janitor_2.1.0      patchwork_1.1.1    sf_1.0-7          
+    ##  [1] gt_0.7.0           janitor_2.1.0      patchwork_1.1.1    sf_1.0-7          
     ##  [5] ggh4x_0.2.1        RColorBrewer_1.1-3 factoextra_1.0.7   testthat_3.1.4    
-    ##  [9] here_1.0.1         forcats_0.5.1      stringr_1.4.0      dplyr_1.0.9       
+    ##  [9] here_1.0.1         forcats_0.5.1      stringr_1.4.1      dplyr_1.0.9       
     ## [13] purrr_0.3.4        readr_2.1.2        tidyr_1.2.0        tibble_3.1.7      
-    ## [17] ggplot2_3.3.6      tidyverse_1.3.1   
+    ## [17] ggplot2_3.3.6      tidyverse_1.3.2   
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] fs_1.5.2           fontawesome_0.2.2  lubridate_1.8.0    bit64_4.0.5       
-    ##  [5] httr_1.4.3         rprojroot_2.0.3    tools_4.2.1        backports_1.4.1   
-    ##  [9] utf8_1.2.2         R6_2.5.1           KernSmooth_2.23-20 DBI_1.1.3         
-    ## [13] colorspace_2.0-3   withr_2.5.0        tidyselect_1.1.2   git2r_0.30.1      
-    ## [17] bit_4.0.4          compiler_4.2.1     cli_3.3.0          rvest_1.0.2       
-    ## [21] xml2_1.3.3         desc_1.4.1         labeling_0.4.2     checkmate_2.1.0   
-    ## [25] scales_1.2.0       classInt_0.4-7     proxy_0.4-27       digest_0.6.29     
-    ## [29] rmarkdown_2.14     pkgconfig_2.0.3    htmltools_0.5.2    maps_3.4.0        
-    ## [33] highr_0.9          dbplyr_2.2.1       fastmap_1.1.0      rlang_1.0.3       
-    ## [37] readxl_1.4.0       rstudioapi_0.13    farver_2.1.1       generics_0.1.3    
-    ## [41] jsonlite_1.8.0     vroom_1.5.7        car_3.1-0          magrittr_2.0.3    
-    ## [45] Rcpp_1.0.9         munsell_0.5.0      fansi_1.0.3        abind_1.4-5       
-    ## [49] lifecycle_1.0.1    stringi_1.7.6      yaml_2.3.5         carData_3.0-5     
-    ## [53] snakecase_0.11.0   gtExtras_0.4.1     brio_1.1.3         paletteer_1.4.0   
-    ## [57] grid_4.2.1         parallel_4.2.1     ggrepel_0.9.1      crayon_1.5.1      
-    ## [61] haven_2.5.0        hms_1.1.1          knitr_1.39.3       pillar_1.7.0      
-    ## [65] ggpubr_0.4.0       ggsignif_0.6.3     pkgload_1.3.0      reprex_2.0.1      
-    ## [69] glue_1.6.2         evaluate_0.15      modelr_0.1.8       vctrs_0.4.1       
-    ## [73] tzdb_0.3.0         cellranger_1.1.0   gtable_0.3.0       rematch2_2.1.2    
-    ## [77] assertthat_0.2.1   xfun_0.31          broom_1.0.0        e1071_1.7-11      
-    ## [81] rstatix_0.7.0      class_7.3-20       units_0.8-0        ellipsis_0.3.2
+    ##  [1] googledrive_2.0.0   colorspace_2.0-3    ggsignif_0.6.3     
+    ##  [4] ellipsis_0.3.2      class_7.3-20        rprojroot_2.0.3    
+    ##  [7] snakecase_0.11.0    fs_1.5.2            rstudioapi_0.13    
+    ## [10] proxy_0.4-27        ggpubr_0.4.0        farver_2.1.1       
+    ## [13] ggrepel_0.9.1       bit64_4.0.5         fansi_1.0.3        
+    ## [16] lubridate_1.8.0     xml2_1.3.3          knitr_1.40.1       
+    ## [19] pkgload_1.3.2       jsonlite_1.8.0      broom_1.0.0        
+    ## [22] dbplyr_2.2.1        compiler_4.2.2      httr_1.4.3         
+    ## [25] backports_1.4.1     assertthat_0.2.1    fastmap_1.1.0      
+    ## [28] gargle_1.2.0        cli_3.3.0           htmltools_0.5.3    
+    ## [31] tools_4.2.2         gtable_0.3.0        glue_1.6.2         
+    ## [34] maps_3.4.0          Rcpp_1.0.9          carData_3.0-5      
+    ## [37] cellranger_1.1.0    vctrs_0.5.0         gtExtras_0.4.1     
+    ## [40] xfun_0.32           brio_1.1.3          rvest_1.0.2        
+    ## [43] lifecycle_1.0.3     rstatix_0.7.0       googlesheets4_1.0.0
+    ## [46] scales_1.2.1        vroom_1.5.7         ragg_1.2.5         
+    ## [49] hms_1.1.1           parallel_4.2.2      rematch2_2.1.2     
+    ## [52] yaml_2.3.5          stringi_1.7.8       paletteer_1.4.0    
+    ## [55] highr_0.9           desc_1.4.2          e1071_1.7-11       
+    ## [58] rlang_1.0.6         pkgconfig_2.0.3     systemfonts_1.0.4  
+    ## [61] fontawesome_0.2.2   evaluate_0.18       labeling_0.4.2     
+    ## [64] bit_4.0.4           tidyselect_1.1.2    magrittr_2.0.3     
+    ## [67] R6_2.5.1            generics_0.1.3      DBI_1.1.3          
+    ## [70] pillar_1.8.1        haven_2.5.0         withr_2.5.0        
+    ## [73] units_0.8-0         abind_1.4-5         modelr_0.1.8       
+    ## [76] crayon_1.5.2        car_3.1-0           KernSmooth_2.23-20 
+    ## [79] utf8_1.2.2          tzdb_0.3.0          rmarkdown_2.16     
+    ## [82] grid_4.2.2          readxl_1.4.0        git2r_0.30.1       
+    ## [85] reprex_2.0.1        digest_0.6.29       classInt_0.4-7     
+    ## [88] textshaping_0.3.6   munsell_0.5.0
 
 </details>

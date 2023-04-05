@@ -91,7 +91,7 @@ planted <- read_tsv(
                    PLOTCODE = col_integer())
 )
 
-names(planted)
+# names(planted)
 
 dat <- planted |>
   dplyr::select(PLOTCODE, Psy) |>
@@ -106,7 +106,7 @@ Psy23_planted <- Psy23 |>
   left_join(dat, by = c("Plotcode3" = "PLOTCODE"))
 
 # A = natural
-table(Psy23_planted$Psy, useNA = "always")
+# table(Psy23_planted$Psy, useNA = "always")
 
 Psy23_planted <- Psy23_planted |> 
   mutate(
@@ -126,7 +126,7 @@ spp2 <- tree23 |>
   group_by(Plotcode2, sppcompa) |>
   summarise(NoTrees2 = length(Plotcode2))
 
-names(spp2)
+# names(spp2)
 
 sppriqueza2 <- spp2 |>
   group_by(Plotcode2) |>
@@ -139,7 +139,7 @@ spp3 <- tree23 |>
   group_by(Plotcode3, sppcompa) |>
   summarise(NoTrees3 = length(Plotcode3))
 
-names(spp3)
+# names(spp3)
 
 sppriqueza3 <- spp3 |>
   group_by(Plotcode3) |>
@@ -177,8 +177,8 @@ Psy3 <- Psy23_planted |>
             cvh3 = sdh3 / mh3) |>
   dplyr::select(!c(sddbh3, sdh3))
 
-map(Psy2, ~sum(is.na(.)))
-map(Psy3, ~sum(is.na(.)))
+# map(Psy2, ~sum(is.na(.)))
+# map(Psy3, ~sum(is.na(.)))
 
 Psy2 <- Psy2 |> 
   mutate(
@@ -215,8 +215,8 @@ Psy2 <- Psy2 |>
 Psy3 <- Psy3 |>
   left_join(pPme3, by = "Plotcode3")
 
-summary(Psy2$Pmedens2)
-summary(Psy3$Pmedens3)
+# summary(Psy2$Pmedens2)
+# summary(Psy3$Pmedens3)
 
 Psy2 <- Psy2 |> 
   mutate(Pmedens2 = replace_na(Pmedens2, 0))
@@ -224,14 +224,14 @@ Psy2 <- Psy2 |>
 Psy3 <- Psy3 |> 
   mutate(Pmedens3 = replace_na(Pmedens3, 0))
 
-summary(Psy2$Pmedens2)
-summary(Psy3$Pmedens3)
+# summary(Psy2$Pmedens2)
+# summary(Psy3$Pmedens3)
 
 Psy23_final <- full_join(Psy2, Psy3, by = "IDPC3")
 
-names(Psy23_final)
+# names(Psy23_final)
 
-nrow(Psy23_final)
+# nrow(Psy23_final)
 
 test_that("sum is number of NA", {
   expect_equal(sum(is.na(Psy23_final$Plotcode2)), 1)
@@ -250,12 +250,12 @@ test_that("Plotcode2 == Plotcode3", {
                          Psy23_final[["Plotcode3"]]), TRUE)
 })
 
-map(Psy23_final, ~sum(is.na(.)))
+# map(Psy23_final, ~sum(is.na(.)))
 
-nrow(Psy23_final)
+# nrow(Psy23_final)
 Psy23_final <- Psy23_final |>
   drop_na()
-nrow(Psy23_final)
+# nrow(Psy23_final)
 table(Psy23_final$type2)
 
 # long format
@@ -266,10 +266,10 @@ Psy23_final_ba_long <- Psy23_final |>
       "ba_ha2", "ba_ha3"
     ),
     names_to = "ba_ifn",
-    values_to = "basal_area"
+    values_to = "Basal area"
   ) |> 
   dplyr::select(
-    IDPC3, ba_ifn, basal_area, type2
+    IDPC3, ba_ifn, "Basal area", type2
     )
 Psy23_final_dens_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -278,10 +278,10 @@ Psy23_final_dens_long <- Psy23_final |>
       "dens2", "dens3"
     ),
     names_to = "dens_ifn",
-    values_to = "density"
+    values_to = "Density"
   ) |> 
   dplyr::select(
-    dens_ifn, density
+    dens_ifn, Density
     )
 Psy23_final_mdbh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -290,10 +290,10 @@ Psy23_final_mdbh_long <- Psy23_final |>
       "mdbh2", "mdbh3"
     ),
     names_to = "mdbh_ifn",
-    values_to = "dbh"
+    values_to = "Mean d.b.h."
   ) |> 
   dplyr::select(
-    mdbh_ifn, dbh
+    mdbh_ifn, "Mean d.b.h."
     )
 Psy23_final_mh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -302,10 +302,10 @@ Psy23_final_mh_long <- Psy23_final |>
       "mh2", "mh3"
     ),
     names_to = "mh_ifn",
-    values_to = "height"
+    values_to = "Mean height"
   ) |> 
   dplyr::select(
-    mh_ifn, height
+    mh_ifn, "Mean height"
   )
 Psy23_final_mhdbh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -314,10 +314,10 @@ Psy23_final_mhdbh_long <- Psy23_final |>
       "mhdbh2", "mhdbh3"
     ),
     names_to = "mhdbh_ifn",
-    values_to = "height_dbh"
+    values_to = "Ratio height:d.b.h."
   ) |> 
   dplyr::select(
-    mhdbh_ifn, height_dbh
+    mhdbh_ifn, "Ratio height:d.b.h."
   )
 Psy23_final_cvdbh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -326,10 +326,10 @@ Psy23_final_cvdbh_long <- Psy23_final |>
       "cvdbh2", "cvdbh3"
     ),
     names_to = "cvdbh_ifn",
-    values_to = "cv_dbh"
+    values_to = "CV of d.b.h."
   ) |> 
   dplyr::select(
-    cvdbh_ifn, cv_dbh
+    cvdbh_ifn, "CV of d.b.h."
   )
 Psy23_final_cvh_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -338,10 +338,10 @@ Psy23_final_cvh_long <- Psy23_final |>
       "cvh2", "cvh3"
     ),
     names_to = "cvh_ifn",
-    values_to = "cv_height"
+    values_to = "CV of height"
   ) |> 
   dplyr::select(
-    cvh_ifn, cv_height
+    cvh_ifn, "CV of height"
   )
 Psy23_final_Pmedens_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -350,10 +350,10 @@ Psy23_final_Pmedens_long <- Psy23_final |>
       "Pmedens2", "Pmedens3"
     ),
     names_to = "Pmedens_ifn",
-    values_to = "saplings"
+    values_to = "Sapling density"
   ) |> 
   dplyr::select(
-    Pmedens_ifn, saplings
+    Pmedens_ifn, "Sapling density"
   )
 Psy23_final_Riqueza_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -362,10 +362,10 @@ Psy23_final_Riqueza_long <- Psy23_final |>
       "Riqueza2", "Riqueza3"
     ),
     names_to = "Riqueza_ifn",
-    values_to = "sp_richness"
+    values_to = "Species richness"
   ) |> 
   dplyr::select(
-    Riqueza_ifn, sp_richness
+    Riqueza_ifn, "Species richness"
   )
 Psy23_final_mqH_long <- Psy23_final |>
   filter(mqH3 <= 6 ) |> 
@@ -374,10 +374,10 @@ Psy23_final_mqH_long <- Psy23_final |>
       "mqH2", "mqH3"
     ),
     names_to = "mqH_ifn",
-    values_to = "tree_vigour"
+    values_to = "Tree vigour"
   ) |> 
   dplyr::select(
-    mqH_ifn, tree_vigour
+    mqH_ifn, "Tree vigour"
   )
 
 Psy23_final_long <- bind_cols(
@@ -404,7 +404,7 @@ test_that("Plotcode2 == Plotcode3", {
 # PCA and clustering: only planted forests
 
 ```{r cluster}
-names(Psy23_final_long)
+# names(Psy23_final_long)
 
 # type = 1 is planted
 Psy23_final_long <- Psy23_final_long |> 
@@ -446,9 +446,18 @@ cluster_ifn23 <- fviz_cluster(
   k3, data = Psy23_final_long_num_sc,
   geom = "point"
   ) + 
-  ggtitle(label = '') +
-  scale_color_manual(values = myColors) +
-  scale_fill_manual(values = myColors)
+  ggtitle(label = "") +
+  scale_color_manual(name = "Cluster",
+                     values = myColors, 
+                    labels = c("C1", "C2")) +
+  scale_fill_manual(name = "Cluster",
+                    values = myColors, 
+                    labels = c("C1", "C2")) +
+  scale_shape_manual(name = "Cluster",
+                     values = c(19, 17),
+                     labels = c("C1", "C2")) +
+  scale_x_continuous(name = "Axis 1 (24.8%)") +
+  scale_y_continuous(name = "Axis 2 (20.1%)")
 cluster_ifn23
 
 # determining number of clusters
@@ -466,19 +475,39 @@ Psy23_final_long <- Psy23_final_long |>
     k3 = k3$cluster
   )
 table(Psy23_final_long$k3)
-names(Psy23_final_long)
+# names(Psy23_final_long)
 
 # for the contingency table
 Psy23_final_long_k <- Psy23_final_long
 
+# statistical test
+Psy23_final_long$k3 <- as.factor(Psy23_final_long$k3)
+levels(Psy23_final_long$k3)
+
+wilcox.test(`Basal area` ~ k3, data = Psy23_final_long)
+wilcox.test(Density ~ k3, data = Psy23_final_long)
+wilcox.test(`Mean d.b.h.` ~ k3, data = Psy23_final_long)
+wilcox.test(`Mean height` ~ k3, data = Psy23_final_long)
+wilcox.test(`Ratio height:d.b.h.` ~ k3, data = Psy23_final_long)
+wilcox.test(`CV of d.b.h.` ~ k3, data = Psy23_final_long)
+wilcox.test(`CV of height` ~ k3, data = Psy23_final_long)
+wilcox.test(`Sapling density` ~ k3, data = Psy23_final_long)
+wilcox.test(`Species richness` ~ k3, data = Psy23_final_long)
+wilcox.test(`Tree vigour` ~ k3, data = Psy23_final_long)
+
 allPsy23 <- Psy23_final_long |>
    pivot_longer(
     cols = c(
-      basal_area,
-      density, dbh, height,
-      height_dbh, cv_dbh, cv_height,
-      saplings, sp_richness,
-      tree_vigour
+      "Basal area",
+      Density,
+      "Mean d.b.h.",
+      "Mean height",
+      "Ratio height:d.b.h.",
+      "CV of d.b.h.",
+      "CV of height",
+      "Sapling density",
+      "Species richness",
+      "Tree vigour"
     ),
     names_to = "structure",
     values_to = "str_value"
@@ -492,13 +521,16 @@ gg_str <- function(data, k){
                    fill = as.character(.data[[k]]))) +
     geom_boxplot(outlier.size = 0.2, width = 0.5) +
     labs(x = "", title = "", y = "")  +
-    scale_fill_manual(name = "cluster", values = myColors) +
+    scale_fill_manual(name = "Cluster", values = myColors,
+                      labels = c("C1", "C2")) +
     facet_wrap(~structure, scale = "free",
-               strip.position = "bottom") +
-    ylab("Structure") +
+               strip.position = "left") +
+    ylab("") +
     theme(
-      axis.text = element_text(colour = "grey50", size = 10),
-      axis.title = element_text(colour = "grey50", size = 12),
+      strip.background = element_blank(),
+      strip.text = element_text(colour = "grey50", size = 10),
+      axis.text.y = element_text(colour = "grey50", size = 10),
+      axis.text.x = element_blank(),
       panel.grid.major = element_line(colour = "grey90", size = 0.5), 
       panel.background = element_blank(),
       legend.key = element_blank(),
@@ -514,7 +546,8 @@ plot_str
 plot_str_plan_nat <- gg_str(data = allPsy23,
                    k = "type2") +
   scale_color_manual(values = c("#F8766D", "#619CFF")) +
-  scale_fill_manual(values = c("#F8766D", "#619CFF"))
+  scale_fill_manual(name = "Stand origin", 
+                    values = c("#F8766D", "#619CFF"))
 plot_str_plan_nat
 
 ggsave( 
@@ -523,13 +556,16 @@ ggsave(
   width = 10, height = 8
 )
 
-plot_PCA <- PCAPsy + theme(
-  legend.title = element_blank(),
-  text = element_text(colour = "grey50", size = 12),
-  panel.grid.minor = element_blank(),
-  axis.text = element_text(colour = "grey50", size = 10),
-  axis.title = element_text(colour = "grey50", size = 12),
-  axis.ticks = element_blank()
+plot_PCA <- PCAPsy +
+  scale_x_continuous(name = "Axis 1 (24.8%)") +
+  scale_y_continuous(name = "Axis 2 (20.1%)") +
+  theme(
+    legend.title = element_blank(),
+    text = element_text(colour = "grey50", size = 12),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(colour = "grey50", size = 10),
+    axis.title = element_text(colour = "grey50", size = 12),
+    axis.ticks = element_blank()
 )
 plot_PCA
 
@@ -547,7 +583,7 @@ plot_cluster
 # Demography (2nd & 3rd forest inventory (ifn23)
 
 ```{r demography}
-names(Psy23_planted)
+# names(Psy23_planted)
 
 # for the dbh of dead treees
 Psy23_planted_m <- Psy23_planted
@@ -629,15 +665,15 @@ plot_dem23 <- plot23 |>
     !c(BAc, Ingrowth, Growth, Mortality, Mortality_nd, Mortality_ausente)
   )
 
-names(plot_dem23)
+# names(plot_dem23)
 
 Psy_dem23 <- plot_dem23
 
-nrow(Psy_dem23)
+# nrow(Psy_dem23)
 
 # planted ifn 23
-nrow(Psy23_final)
-names(Psy23_final)
+# nrow(Psy23_final)
+# names(Psy23_final)
 
 table(Psy_dem23$type2, useNA = "always")
 # keep the cluster of ifn2
@@ -645,7 +681,7 @@ Psy23_final_long <- Psy23_final_long |>
   distinct(IDPC3, .keep_all = T)
 
 # there are some plots with NA in the planted and natural cluster
-# because they only contain one LIVE tree. I deleted them
+# because they only contain one ALIVE tree. I deleted them
 # kk <- Psy23_planted |>
 #   filter(
 #   IDPC3 == "10913A1" | IDPC3 == "10634A1"
@@ -656,11 +692,11 @@ Psy_dem23 <- Psy_dem23 |>
   left_join(Psy23_final_long,
             by = "IDPC3")
 
-nrow(Psy_dem23)
-
-map(Psy_dem23, ~sum(is.na(.)))
-
-names(Psy_dem23)
+# nrow(Psy_dem23)
+# 
+# map(Psy_dem23, ~sum(is.na(.)))
+# 
+# names(Psy_dem23)
 
 Psy_dem23_sel <- Psy_dem23 |>
   dplyr::select(
@@ -707,13 +743,14 @@ gg_dem <- function(k){
     geom_boxplot(outlier.shape = NA) +
     labs(x = "", title = "", y = "Demography")  +
     scale_color_manual(values = myColors) +
-    scale_fill_manual(values = myColors) +
+    scale_fill_manual(name = "Cluster",
+                      labels = c("C1", "C2"),
+                      values = myColors) +
     facet_wrap2(
       ~type2.x, strip = col_strips
       ) +
     coord_cartesian(ylim = c(0.0, 0.25)) +
     theme(
-      legend.title = element_blank(),
       axis.title.x = element_blank(),
       axis.text = element_text(colour = "grey50", size = 10),
       axis.title = element_text(colour = "grey50", size = 12),
@@ -732,12 +769,12 @@ ggsave(
   width = 10, height = 8
 )
 
-summary(Psy_dem23_sel_lon |> 
-  filter(type2.x == "Planted" & demography == "Ingrowth23") |> 
-    select(dem_value))
-summary(Psy_dem23_sel_lon |> 
-  filter(type2.x == "Natural" & demography == "Ingrowth23") |> 
-    select(dem_value))
+# summary(Psy_dem23_sel_lon |> 
+#   filter(type2.x == "Planted" & demography == "Ingrowth23") |> 
+#     select(dem_value))
+# summary(Psy_dem23_sel_lon |> 
+#   filter(type2.x == "Natural" & demography == "Ingrowth23") |> 
+#     select(dem_value))
 ```
 
 # Legacies map
@@ -776,8 +813,8 @@ cPsy_sf <- st_as_sf(x = cPsy,
                     crs = "+proj=utm +zone=30 +ellps=intl +units=m +no_defs")
 st_crs(cPsy_sf)
 
-ggplot() + 
-  geom_sf(data = cPsy_sf)
+# ggplot() + 
+#   geom_sf(data = cPsy_sf)
 
 cPsy_sf_map <- st_transform(
   cPsy_sf,
@@ -798,8 +835,13 @@ map_plots <- function(col.var){
     geom_point(data = cPsy_sp_tb,
                aes(CX, CY, color = as.factor(.data[[col.var]]),
                    shape = as.factor(.data[[col.var]])),
-               size = .5) + 
-    scale_color_manual(values = myColors, name = "cluster") +
+               ) + 
+    scale_color_manual(values = myColors, 
+                       name = "Cluster",
+                       labels = c("C1", "C2")) +
+    scale_shape_manual(values = c(19, 17),
+                       labels = c("C1", "C2"),
+                       name = "Cluster") +
     xlab("") +
     ylab("") + 
     guides(colour = guide_legend(override.aes = list(size = 5))) +
@@ -817,41 +859,49 @@ map_plots <- function(col.var){
           panel.background = element_blank())
 }
 
-map_cluster <- map_plots(col.var = "k3") +
-  scale_shape_manual(values = c(19, 17), name = "cluster")
+map_cluster <- map_plots(col.var = "k3")
 map_cluster
   
 map_planted <- map_plots(col.var = "type2.x") +
   scale_color_manual(
     limits = c("Natural", "Planted"),
-    labels = c("natural", "planted"),
+    labels = c("Natural", "Planted"),
     values = c("#F8766D", "#00BFC4"),
-    name = "cluster"
+    name = "Cluster"
     ) +
   scale_shape_manual(
     limits = c("Natural", "Planted"),
-    labels = c("natural", "planted"),
+    labels = c("Natural", "Planted"),
     values = c(19, 17),
-    name = "cluster"
+    name = "Cluster"
     )
 map_planted
 
 # save paper plots --------------------------------------------------------
-plot_PCA + theme(legend.position = "none") + map_planted +
+(plot_PCA + theme(legend.position = "none")) / map_planted +
   plot_annotation(tag_levels = "a")
 
 ggsave(
   here("03-results", "si_figures", "s1_psy_plan_nat.png"),
-  width = 16, height = 8
+  width = 6, height = 8
 )
 
-(plot_cluster + plot_str) /
-  (map_cluster + plot_spacer()) +
-  plot_annotation(tag_levels = "a")
-
+plot_cluster + plot_annotation(tag_levels = "a")
 ggsave(
-  here("03-results", "si_figures", "s2_psy_cluster.png"),
-  width = 18, height = 10
+  here("03-results", "si_figures", "s2_psy_cluster1.png"),
+  width = 6, height = 5
+)
+
+plot_str + plot_annotation(tag_levels = list("b"))
+ggsave(
+  here("03-results", "si_figures", "s2_psy_cluster2.png"),
+  width = 10, height = 6
+)
+
+map_cluster + plot_annotation(tag_levels = list("c"))
+ggsave(
+  here("03-results", "si_figures", "s2_psy_cluster3.png"),
+  width = 6, height = 5
 )
 ```
 
@@ -864,16 +914,16 @@ clima <- read_csv(here("01-data", "climate", "completeclimate.csv")) |>
 # remove duplicated plots
 clima <- clima |> 
   distinct(IDPC, .keep_all = T)
-nrow(clima)
+# nrow(clima)
 
 dem_clim <- left_join(
   Psy_dem23_sel, clima, by = c("IDPC3" = "IDPC")
   )
-nrow(dem_clim)
-
-map(dem_clim, ~sum(is.na(.)))
-
-table(dem_clim$k3)
+# nrow(dem_clim)
+# 
+# map(dem_clim, ~sum(is.na(.)))
+# 
+# table(dem_clim$k3)
 
 dem_clim_final <- dem_clim |> 
   dplyr::select(
@@ -883,7 +933,7 @@ dem_clim_final <- dem_clim |>
 
 glimpse(dem_clim_final)
 
-map(dem_clim_final, ~sum(is.na(.)))
+# map(dem_clim_final, ~sum(is.na(.)))
 
 # delete 3C plot types
 dem_clim_final <- dem_clim_final |> 
@@ -894,7 +944,7 @@ dem_clim_final <- dem_clim_final |>
     WAIplot, speimean, speimin
     )
 
-map(dem_clim_final, ~sum(is.na(.)))
+# map(dem_clim_final, ~sum(is.na(.)))
 
 write_csv(dem_clim_final, here("01-data", "legacies", "dem_clim_ps_cut.csv"))
 ```
@@ -962,9 +1012,9 @@ dem_clim <- read_csv(
   here("01-data", "legacies", "dem_clim_ps_cut.csv")
 )
 
-table(dem_clim$k3)
-table(dem_clim$type2.x)
-summary(dem_clim$Mortality23)
+# table(dem_clim$k3)
+# table(dem_clim$type2.x)
+# summary(dem_clim$Mortality23)
 
 dem_clim <- dem_clim |> 
   unite("k_type", k3:type2.x) |> 
@@ -1026,11 +1076,16 @@ test_that("nrow is correct", {
 dem_clim_str23_l <- dem_clim_str23 |>
   pivot_longer(
     cols = c(
-      basal_area,
-      density, dbh, height,
-      height_dbh, cv_dbh, cv_height,
-      saplings, sp_richness,
-      tree_vigour
+      "Basal area",
+      Density,
+      "Mean d.b.h.",
+      "Mean height",
+      "Ratio height:d.b.h.",
+      "CV of d.b.h.",
+      "CV of height",
+      "Sapling density",
+      "Species richness",
+      "Tree vigour"
     ),
     names_to = "structure",
     values_to = "str_value"
@@ -1055,22 +1110,24 @@ gg_str_clorig <- dem_clim_str23_l |>
   labs(x = "", title = "", y = "")  +
   scale_fill_manual(name = "", values = myColors) +
   facet_wrap(~structure, scale = "free",
-             strip.position = "bottom") +
-  ylab("Structure") +
+             strip.position = "left") +
+  ylab("") +
   theme(
-    axis.text = element_text(colour = "grey50", size = 10),
     axis.title = element_text(colour = "grey50", size = 12),
     panel.grid.major = element_line(colour = "grey90", size = 0.5), 
     panel.background = element_blank(),
     legend.key = element_blank(),
-    strip.text.x = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(colour = "grey50", size = 10),
+    axis.text.y = element_text(colour = "grey50", size = 10),
+    axis.text.x = element_blank(),
     axis.ticks = element_blank()
   )
 
 # dbh of plots with dead trees
 gg_dbh_mort <- dem_clim_str23_l |> 
   filter(mort_real > 0 & 
-           structure == "dbh") |> 
+           structure == "Mean d.b.h.") |> 
   mutate(
     k_type = recode_factor(
       k_type, 
@@ -1103,7 +1160,7 @@ gg_dbh_mort
 # basal area of plots with dead trees
 gg_ba_mort <- dem_clim_str23_l |> 
   filter(mort_real > 0 & 
-           structure == "basal_area") |> 
+           structure == "Basal area") |> 
   mutate(
     k_type = recode_factor(
       k_type, 
@@ -1237,7 +1294,7 @@ ggsave(
   plot = gg_str_clorig,
   here("03-results", "si_figures",
        "s8_str_clorig.png"),
-  width = 14, height = 6
+  width = 10, height = 6
 )
 
 ggsave(

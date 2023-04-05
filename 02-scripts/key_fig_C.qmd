@@ -24,8 +24,8 @@ library(htmlwidgets)
 mod <- gam(qsec ~ te(hp) + te(wt) + ti(hp, wt), data = mtcars)
 
 # make some predictions for the model at different combinations of hp and wt
-hp_seq <- seq(min(mtcars$hp, na.rm = TRUE), max(mtcars$hp, na.rm=TRUE), length = 25)
-wt_seq <- seq(min(mtcars$wt, na.rm = TRUE), max(mtcars$wt, na.rm=TRUE), length = 25)
+hp_seq <- seq(min(mtcars$hp, na.rm = TRUE), max(mtcars$hp, na.rm = TRUE), length = 25)
+wt_seq <- seq(min(mtcars$wt, na.rm = TRUE), max(mtcars$wt, na.rm = TRUE), length = 25)
 
 # make a function that will generate predictions
 predfun <- function(x, y){
@@ -50,9 +50,9 @@ axz <- list(
 
 # ticks formatting
 axx <- list(
-  title = "Composition – Lack of adaptive capacity",
+  title = "Composition – Adaptive capacity",
   ticketmode = 'array',
-  ticktext = c("High", "Low"),
+  ticktext = c("Low", "High"),
   tickvals = c(50, 300)
 )
 axy <- list(

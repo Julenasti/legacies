@@ -15,10 +15,7 @@ library(sf)
 library(viridis)
 library(glmmTMB)
 library(DHARMa)
-library(corrr)
-library(bbmle)
 library(MASS, exclude = "select")
-library(performance)
 library(ggdist)
 library(RColorBrewer)
 library(testthat)
@@ -67,6 +64,19 @@ table(dem_clim$k_type)
     ## 
     ## 1_Natural 1_Planted 2_Natural 2_Planted 
     ##      2401       772      1118       520
+
+``` r
+# absolute mortality
+dem_clim_mort_abs <- dem_clim |> 
+  mutate(
+    mort_abs = ba_ifn2 * mort_real
+  ) |> 
+  filter(mort_abs > 0) |> 
+  group_by(k_type) |> 
+  summarise(
+    mort_abs_type = mean(mort_abs, na.rm = T)
+  )
+```
 
 # Exploratory data analyses
 
@@ -198,13 +208,9 @@ st_crs(dem_clim_sf)
     ##                 ID["EPSG",9001]]]]
 
 ``` r
-ggplot() + 
-  geom_sf(data = dem_clim_sf)
-```
+# ggplot() + 
+#   geom_sf(data = dem_clim_sf)
 
-![](02-modeling_files/figure-gfm/EDA-2.png)<!-- -->
-
-``` r
 # transform to long lat
 dem_clim_sf_map <- st_transform(
   dem_clim_sf,
@@ -247,7 +253,7 @@ dem_clim_sp_tb <- dem_clim_sf_map |>
 map_plot <- function(col){
   map_loc + 
     geom_point(data = dem_clim_sp_tb,
-               aes(CX, CY, color = .data[[col]]), size = .5, alpha = .8) + 
+               aes(CX, CY, color = .data[[col]]), size = .1, alpha = .8) + 
     scale_color_viridis() +
     xlab("") +
     ylab("") + 
@@ -266,10 +272,10 @@ map_plot <- function(col){
           panel.background = element_blank())
 }
 
-map_plot("WAIplot") + map_plot("speimin")
+map_plot("WAIplot") / map_plot("speimin")
 ```
 
-![](02-modeling_files/figure-gfm/EDA-3.png)<!-- -->
+![](02-modeling_files/figure-gfm/EDA-2.png)<!-- -->
 
 ``` r
 # full data
@@ -288,7 +294,7 @@ map(var_int_all, ~gg_mort(.)) |>
   reduce(`/`)
 ```
 
-![](02-modeling_files/figure-gfm/EDA-4.png)<!-- -->
+![](02-modeling_files/figure-gfm/EDA-3.png)<!-- -->
 
 ``` r
 ggsave(
@@ -344,7 +350,7 @@ gg_cor <- ggplot(corm, aes(term, fct_rev(colname),
 gg_cor
 ```
 
-![](02-modeling_files/figure-gfm/EDA-5.png)<!-- -->
+![](02-modeling_files/figure-gfm/EDA-4.png)<!-- -->
 
 ``` r
 ggsave(
@@ -429,7 +435,7 @@ summary(zigamma_model_1)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-# This summary can be broken down into 3 sections.
+# This summary can be broken down into 3 sections
 
 # The top section is a general overview
 # containing a description of the model specification
@@ -453,198 +459,6 @@ summary(zigamma_model_1)
 # the conditional model where a positive contrast 
 # indicates a higher abundance
 
-zigamma_model_2 <- glmmTMB(
-  mort_real ~ k_type * WAIplot + k_type * speimin,
-  family = ziGamma(link = "log"),
-  # we assume that absences will at least vary by:
-  ziformula = ~ k_type * WAIplot * speimin,
-  data = dem_clim
-)
-
-summary(zigamma_model_2)
-```
-
-    ##  Family: Gamma  ( log )
-    ## Formula:          mort_real ~ k_type * WAIplot + k_type * speimin
-    ## Zero inflation:             ~k_type * WAIplot * speimin
-    ## Data: dem_clim
-    ## 
-    ##      AIC      BIC   logLik deviance df.resid 
-    ##  -6212.9  -6025.0   3135.4  -6270.9     4782 
-    ## 
-    ## 
-    ## Dispersion estimate for Gamma family (sigma^2): 0.682 
-    ## 
-    ## Conditional model:
-    ##                           Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)             -5.1265582  0.3753642 -13.658  < 2e-16 ***
-    ## k_type1_Planted          1.2834568  0.7611187   1.686 0.091742 .  
-    ## k_type2_Natural          1.0899380  0.6192437   1.760 0.078389 .  
-    ## k_type2_Planted          1.7109441  0.6651767   2.572 0.010106 *  
-    ## WAIplot                 -0.0033511  0.0009988  -3.355 0.000793 ***
-    ## speimin                 -0.4191160  0.2280526  -1.838 0.066091 .  
-    ## k_type1_Planted:WAIplot -0.0040327  0.0024325  -1.658 0.097344 .  
-    ## k_type2_Natural:WAIplot  0.0026829  0.0016095   1.667 0.095546 .  
-    ## k_type2_Planted:WAIplot -0.0024204  0.0022403  -1.080 0.279970    
-    ## k_type1_Planted:speimin  0.7235635  0.4814481   1.503 0.132867    
-    ## k_type2_Natural:speimin  1.0046176  0.3754290   2.676 0.007452 ** 
-    ## k_type2_Planted:speimin  1.1205896  0.4196260   2.670 0.007575 ** 
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Zero-inflation model:
-    ##                                  Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)                      1.239110   0.636473   1.947  0.05155 . 
-    ## k_type1_Planted                 -1.112879   1.078764  -1.032  0.30225   
-    ## k_type2_Natural                 -3.108063   1.160302  -2.679  0.00739 **
-    ## k_type2_Planted                 -0.085756   1.112356  -0.077  0.93855   
-    ## WAIplot                         -0.016887   0.017210  -0.981  0.32648   
-    ## speimin                          0.152894   0.387175   0.395  0.69292   
-    ## k_type1_Planted:WAIplot          0.088535   0.032187   2.751  0.00595 **
-    ## k_type2_Natural:WAIplot          0.062533   0.033318   1.877  0.06054 . 
-    ## k_type2_Planted:WAIplot          0.014414   0.034406   0.419  0.67526   
-    ## k_type1_Planted:speimin         -0.912523   0.677802  -1.346  0.17821   
-    ## k_type2_Natural:speimin         -1.182461   0.703454  -1.681  0.09278 . 
-    ## k_type2_Planted:speimin          0.548014   0.706782   0.775  0.43812   
-    ## WAIplot:speimin                 -0.004181   0.010270  -0.407  0.68389   
-    ## k_type1_Planted:WAIplot:speimin  0.054491   0.020585   2.647  0.00812 **
-    ## k_type2_Natural:WAIplot:speimin  0.036730   0.019966   1.840  0.06582 . 
-    ## k_type2_Planted:WAIplot:speimin  0.006593   0.022230   0.297  0.76679   
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-zigamma_model_3 <- glmmTMB(
-  mort_real ~ WAIplot + k_type * speimin,
-  family = ziGamma(link = "log"),
-  # we assume that absences will at least vary by:
-  ziformula = ~ k_type * WAIplot * speimin,
-  data = dem_clim
-)
-
-summary(zigamma_model_3)
-```
-
-    ##  Family: Gamma  ( log )
-    ## Formula:          mort_real ~ WAIplot + k_type * speimin
-    ## Zero inflation:             ~k_type * WAIplot * speimin
-    ## Data: dem_clim
-    ## 
-    ##      AIC      BIC   logLik deviance df.resid 
-    ##  -6209.7  -6041.3   3130.9  -6261.7     4785 
-    ## 
-    ## 
-    ## Dispersion estimate for Gamma family (sigma^2): 0.685 
-    ## 
-    ## Conditional model:
-    ##                           Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)             -5.1204487  0.3750712 -13.652  < 2e-16 ***
-    ## WAIplot                 -0.0031858  0.0006953  -4.582 4.61e-06 ***
-    ## k_type1_Planted          1.2940595  0.7774866   1.664   0.0960 .  
-    ## k_type2_Natural          0.7935201  0.6013685   1.320   0.1870    
-    ## k_type2_Planted          1.6276257  0.6713484   2.424   0.0153 *  
-    ## speimin                 -0.4150045  0.2277342  -1.822   0.0684 .  
-    ## k_type1_Planted:speimin  0.7089577  0.4920948   1.441   0.1497    
-    ## k_type2_Natural:speimin  0.8308952  0.3650464   2.276   0.0228 *  
-    ## k_type2_Planted:speimin  1.0523835  0.4228029   2.489   0.0128 *  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Zero-inflation model:
-    ##                                  Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)                      1.239133   0.636474   1.947  0.05155 . 
-    ## k_type1_Planted                 -1.112844   1.078764  -1.032  0.30226   
-    ## k_type2_Natural                 -3.108050   1.160302  -2.679  0.00739 **
-    ## k_type2_Planted                 -0.085702   1.112357  -0.077  0.93859   
-    ## WAIplot                         -0.016889   0.017210  -0.981  0.32643   
-    ## speimin                          0.152908   0.387176   0.395  0.69289   
-    ## k_type1_Planted:WAIplot          0.088536   0.032187   2.751  0.00595 **
-    ## k_type2_Natural:WAIplot          0.062536   0.033318   1.877  0.06053 . 
-    ## k_type2_Planted:WAIplot          0.014420   0.034406   0.419  0.67514   
-    ## k_type1_Planted:speimin         -0.912499   0.677802  -1.346  0.17822   
-    ## k_type2_Natural:speimin         -1.182456   0.703454  -1.681  0.09278 . 
-    ## k_type2_Planted:speimin          0.548049   0.706782   0.775  0.43809   
-    ## WAIplot:speimin                 -0.004183   0.010270  -0.407  0.68381   
-    ## k_type1_Planted:WAIplot:speimin  0.054492   0.020585   2.647  0.00812 **
-    ## k_type2_Natural:WAIplot:speimin  0.036732   0.019966   1.840  0.06580 . 
-    ## k_type2_Planted:WAIplot:speimin  0.006596   0.022230   0.297  0.76667   
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-zigamma_model_4 <- glmmTMB(
-  mort_real ~ speimin + k_type * WAIplot,
-  family = ziGamma(link = "log"),
-  # we assume that absences will at least vary by:
-  ziformula = ~ k_type * WAIplot * speimin,
-  data = dem_clim
-)
-
-summary(zigamma_model_4)
-```
-
-    ##  Family: Gamma  ( log )
-    ## Formula:          mort_real ~ speimin + k_type * WAIplot
-    ## Zero inflation:             ~k_type * WAIplot * speimin
-    ## Data: dem_clim
-    ## 
-    ##      AIC      BIC   logLik deviance df.resid 
-    ##  -6208.0  -6039.5   3130.0  -6260.0     4785 
-    ## 
-    ## 
-    ## Dispersion estimate for Gamma family (sigma^2): 0.685 
-    ## 
-    ## Conditional model:
-    ##                           Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)             -4.2367539  0.2509714 -16.881  < 2e-16 ***
-    ## speimin                  0.1216737  0.1506904   0.807  0.41941    
-    ## k_type1_Planted          0.1102001  0.0773022   1.426  0.15399    
-    ## k_type2_Natural         -0.5624914  0.0477827 -11.772  < 2e-16 ***
-    ## k_type2_Planted         -0.0741467  0.0665860  -1.114  0.26547    
-    ## WAIplot                 -0.0031066  0.0009967  -3.117  0.00183 ** 
-    ## k_type1_Planted:WAIplot -0.0042460  0.0024304  -1.747  0.08063 .  
-    ## k_type2_Natural:WAIplot  0.0019105  0.0015795   1.210  0.22646    
-    ## k_type2_Planted:WAIplot -0.0021346  0.0022183  -0.962  0.33592    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Zero-inflation model:
-    ##                                  Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)                      1.239119   0.636473   1.947  0.05155 . 
-    ## k_type1_Planted                 -1.112845   1.078765  -1.032  0.30226   
-    ## k_type2_Natural                 -3.108022   1.160301  -2.679  0.00739 **
-    ## k_type2_Planted                 -0.085726   1.112356  -0.077  0.93857   
-    ## WAIplot                         -0.016889   0.017210  -0.981  0.32640   
-    ## speimin                          0.152905   0.387175   0.395  0.69290   
-    ## k_type1_Planted:WAIplot          0.088535   0.032187   2.751  0.00595 **
-    ## k_type2_Natural:WAIplot          0.062536   0.033318   1.877  0.06053 . 
-    ## k_type2_Planted:WAIplot          0.014419   0.034406   0.419  0.67516   
-    ## k_type1_Planted:speimin         -0.912510   0.677803  -1.346  0.17821   
-    ## k_type2_Natural:speimin         -1.182443   0.703454  -1.681  0.09278 . 
-    ## k_type2_Planted:speimin          0.548035   0.706782   0.775  0.43811   
-    ## WAIplot:speimin                 -0.004183   0.010270  -0.407  0.68378   
-    ## k_type1_Planted:WAIplot:speimin  0.054491   0.020585   2.647  0.00812 **
-    ## k_type2_Natural:WAIplot:speimin  0.036732   0.019966   1.840  0.06580 . 
-    ## k_type2_Planted:WAIplot:speimin  0.006595   0.022230   0.297  0.76670   
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-bbmle::AICtab(
-  zigamma_model_1,
-  zigamma_model_2,
-  zigamma_model_3,
-  zigamma_model_4
-  )
-```
-
-    ##                 dAIC df
-    ## zigamma_model_2  0.0 29
-    ## zigamma_model_3  3.2 26
-    ## zigamma_model_1  4.0 33
-    ## zigamma_model_4  4.9 26
-
-``` r
 # https://cran.r-project.org/web/packages/glmmTMB/vignettes/model_evaluation.pdf
 
 ## model checking and diagnostics ------------------------------------------
@@ -680,32 +494,6 @@ testZeroInflation(zigamma_model_simres_1)
     ## alternative hypothesis: two.sided
 
 ``` r
-# x11()
-testDispersion(zigamma_model_simres_1)
-```
-
-![](02-modeling_files/figure-gfm/modelling-4.png)<!-- -->
-
-    ## 
-    ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs.
-    ##  simulated
-    ## 
-    ## data:  simulationOutput
-    ## dispersion = 1.2917, p-value < 2.2e-16
-    ## alternative hypothesis: two.sided
-
-``` r
-# shows your actual dispersion
-# with a histogram of simulated residuals. 
-# Since your value is to the right it indicates
-# that your model has over-dispersion
-plot(check_predictions(zigamma_model_1)) +
-  coord_cartesian(xlim = c(0, 0.02))
-```
-
-![](02-modeling_files/figure-gfm/modelling-5.png)<!-- -->
-
-``` r
 # testZeroInflation(zigamma_model_simres_1)
 # shows the simulated number
 # of zeroes with your actual number shown as red. 
@@ -713,28 +501,7 @@ plot(check_predictions(zigamma_model_1)) +
 # so there is no zero-inflation now
 # makes sense to fit a zero-inflated model
 
-# sensitivity analysis
-# predict_real <- predict(
-#   object = zigamma_model_1, newdata = dem_clim,
-#   se.fit = TRUE, type = "conditional"
-# )
-# 
-# dem_clim_pred <- dem_clim |>
-#   mutate(
-#     predFE = predict_real$fit
-#   )
-# 
-# dem_clim_pred_n0 <- dem_clim_pred |>
-#   filter(mort_real > 0)
-# 
-# ggplot(dem_clim_pred_n0, aes(
-#   mort_real, predFE
-#   )) +
-#   geom_point(alpha = .7) +
-#   geom_abline(intercept = 0, slope = 1, color = "red") +
-#   coord_cartesian(xlim = c(0, .08), ylim = c(0, .08))
-
-## predictions -------------------------------------------
+## predictions: average predictive comparisons -------------------------------------------
 summary(zigamma_model_1)
 ```
 
@@ -792,17 +559,20 @@ summary(zigamma_model_1)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-# zigamma_model_1 <- zigamma_model_1 
-
-# newdata
-# change climate
-# reduction in WAI & spei per plot equal to 
-# the difference between the median & the 1st Qu
+# reduction in WAI & spei per plot between the median and the 30 percentile
+# http://www.ub.edu/irbio/droughts-and-rising-sea-levels-are-the-impacts-of-climate-change-that-will-most-affect-the-mediterranean-basin-n-952-en
 summary(dem_clim$WAIplot)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ## -67.186 -29.780 -11.345  -6.280   9.726 127.395
+
+``` r
+quantile(dem_clim$WAIplot, probs = c(.25, .3, .5))
+```
+
+    ##       25%       30%       50% 
+    ## -29.77998 -26.94356 -11.34503
 
 ``` r
 summary(dem_clim$speimin)
@@ -812,39 +582,26 @@ summary(dem_clim$speimin)
     ##  -2.565  -1.692  -1.623  -1.619  -1.582  -1.123
 
 ``` r
+quantile(dem_clim$speimin, probs = c(.25, .3, .5))
+```
+
+    ##       25%       30%       50% 
+    ## -1.692370 -1.692370 -1.622561
+
+``` r
+# climate impact
 dem_clim_cc <- dem_clim |> 
   mutate(
-    WAIplot = WAIplot - 18.435,
-    speimin = speimin - 0.069
+    WAIplot = WAIplot - 15.59853,
+    speimin = speimin - 0.069809809
   )
 
-# change legacy for planted plots + climate impact
-dem_clim_c2p_cc <- dem_clim |> 
-    filter(
-    k_type == "1_Planted" |
-      k_type == "2_Planted"
-    ) |> 
-  mutate(
-    k_type = "2_Planted",
-    WAIplot = WAIplot - 18.435,
-    speimin = speimin - 0.069
-  )
-
-dem_clim_c2n_cc <- dem_clim |> 
-    filter(
-    k_type == "1_Natural" |
-      k_type == "2_Natural"
-    ) |> 
-  mutate(
-    k_type = "2_Natural",
-    WAIplot = WAIplot - 18.435,
-    speimin = speimin - 0.069
-  )
+# without climate impact
+dem_clim_no_cc <- dem_clim
 
 dem_clim_new <- list(
   dem_clim_cc,
-  dem_clim_c2p_cc,
-  dem_clim_c2n_cc
+  dem_clim_no_cc
 )
 
 # https://www.rdocumentation.org/packages/glmmTMB/versions/1.1.3/topics/predict.glmmTMB
@@ -869,76 +626,38 @@ arg2_dat_pred <- list(
 dem_clim_new_pred <- arg2_dat_pred |>
   pmap(add_predictions)
 
-# add observed data
-## all plots
-dem_clim_obs_all <- dem_clim
+# length(dem_clim_new_pred)
 
-## only planted plots
-dem_clim_obs_p <- dem_clim |> 
-  filter(
-    k_type == "1_Planted" |
-      k_type == "2_Planted"
-    ) 
-
-## only natural plots
-dem_clim_obs_n <- dem_clim |> 
-  filter(
-    k_type == "1_Natural" |
-      k_type == "2_Natural"
-    ) 
-
-dem_clim_pred_obs <- append(
-  dem_clim_new_pred, 
-  c(list(dem_clim_obs_all),
-  list(dem_clim_obs_p),
-  list(dem_clim_obs_n))
-  )
-length(dem_clim_pred_obs)
-```
-
-    ## [1] 6
-
-``` r
-names(dem_clim_pred_obs) <- c(
+names(dem_clim_new_pred) <- c(
   "dem_clim_cc",
-  "dem_clim_c2p_cc",
-  "dem_clim_c2n_cc",
-  "dem_clim_obs_all",
-  "dem_clim_obs_p",
-  "dem_clim_obs_n"
+  "dem_clim_no_cc"
 )
 
 # add prediction name to each dataset
 mutate_name <- function(x, names_df){
-  dem_clim_pred_obs[[x]] |> 
+  dem_clim_new_pred[[x]] |> 
     dplyr::mutate(
       df = names_df
     )
 }
 
 arg2_x_names_df <- list(
-  x = 1:length(dem_clim_pred_obs), 
-  names_df = names(dem_clim_pred_obs)
+  x = 1:length(dem_clim_new_pred), 
+  names_df = names(dem_clim_new_pred)
   )
 
-dem_clim_pred_obs_n <- arg2_x_names_df |>
+dem_clim_new_pred_n <- arg2_x_names_df |>
   pmap_df(mutate_name)
 
-table(dem_clim_pred_obs_n$df)
+table(dem_clim_new_pred_n$df)
 ```
 
     ## 
-    ##  dem_clim_c2n_cc  dem_clim_c2p_cc      dem_clim_cc dem_clim_obs_all 
-    ##             3519             1292             4811             4811 
-    ##   dem_clim_obs_n   dem_clim_obs_p 
-    ##             3519             1292
+    ##    dem_clim_cc dem_clim_no_cc 
+    ##           4811           4811
 
 ``` r
-dem_clim_all_pred_obs <- dem_clim_pred_obs_n |> 
-  filter(df == "dem_clim_cc" |
-           df == "dem_clim_obs_all")
-
-table(dem_clim_all_pred_obs$k_type)
+table(dem_clim_new_pred_n$k_type)
 ```
 
     ## 
@@ -946,40 +665,56 @@ table(dem_clim_all_pred_obs$k_type)
     ##      4802      1544      2236      1040
 
 ``` r
-table(dem_clim_all_pred_obs$df)
+# compare predictions to actual data
+dem_clim_c <- dem_clim_new_pred_n |> 
+  filter(df == "dem_clim_no_cc") |> 
+  filter(predFE > 0 & mort_real > 0)
+cor(dem_clim_c$mort_real, dem_clim_c$predFE)
 ```
 
-    ## 
-    ##      dem_clim_cc dem_clim_obs_all 
-    ##             4811             4811
+    ## [1] 0.2697114
 
 ``` r
-dem_clim_all_pred_obs <- dem_clim_all_pred_obs |> 
-  mutate(
-    mortality_pred_obs = if_else(
-      is.na(predFE), mort_real, predFE
-    )
-  )
+# mean difference between predicted and 
+# predicted under cc
+dem_clim_diff <- dem_clim_new_pred_n |> 
+  filter(mort_real > 0) |> 
+  group_by(df, k_type) |> 
+  summarise(mort_df_type = mean(predFE, na.rm = T) * 100)
 
-summary(dem_clim_all_pred_obs$mort_real)
+# c1 natural
+dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_cc" & dem_clim_diff$k_type == "1_Natural"] / dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_no_cc" & dem_clim_diff$k_type == "1_Natural"]
 ```
 
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.000000 0.000000 0.000000 0.003459 0.003595 0.090909
+    ## [1] 1.089844
 
 ``` r
-summary(dem_clim_all_pred_obs$predFE)
+# c1 planted
+dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_cc" & dem_clim_diff$k_type == "1_Planted"] / dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_no_cc" & dem_clim_diff$k_type == "1_Planted"]
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   0.004   0.009   0.013   0.012   0.015   0.031    4811
+    ## [1] 1.128943
+
+``` r
+# c2 natural
+dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_cc" & dem_clim_diff$k_type == "2_Natural"] / dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_no_cc" & dem_clim_diff$k_type == "2_Natural"]
+```
+
+    ## [1] 0.9729331
+
+``` r
+# c2 planted
+dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_cc" & dem_clim_diff$k_type == "2_Planted"] / dem_clim_diff$mort_df_type[dem_clim_diff$df == "dem_clim_no_cc" & dem_clim_diff$k_type == "2_Planted"]
+```
+
+    ## [1] 0.9924395
 
 ``` r
 # https://cran.r-project.org/web/packages/ggdist/vignettes/slabinterval.html#multiple-slabs-and-intervals-in-composite-plots
 # Quantile dotplots
-gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
+gg_dem_clim_pred <- dem_clim_new_pred_n |>
   # when there is mortality (conditional part)
-  filter(mort_real > 0) |> 
+  filter(predFE > 0) |> 
   mutate(
     k_type = recode_factor(
       k_type, 
@@ -990,24 +725,26 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
     ),
     df = recode_factor(
       df, 
-      "dem_clim_obs_all" = "Observed",
-      "dem_clim_cc" = "Predicted"
+      "dem_clim_no_cc" = "Predicted",
+      "dem_clim_cc" = "Predicted under climate change"
     )
   ) |>
-  ggplot(aes(x = k_type, y = mortality_pred_obs * 100,
+  ggplot(aes(x = k_type, y = predFE * 100,
              color = df, fill = df
              )) +
   stat_dots(
     scale = 0.5,
     quantiles = 50,
     .width = 0,
-    alpha = .6,
+    alpha = .8,
     color = NA,
     size = 0
     ) +
     stat_halfeye(
     .width = 0,
     slab_fill = NA,
+    size = 1,
+    point_interval = "mean_qi"
   ) +
   ylab(expression(paste("Mortality (%",~ha^-1~year^-1,")"))) +
   scale_fill_manual(values = c("#E1BE6A", "#40B0A6"),
@@ -1015,124 +752,56 @@ gg_dem_clim_all_pred_obs <- dem_clim_all_pred_obs |>
   scale_color_manual(values = c("#E1BE6A", "#40B0A6")) +
   coord_cartesian(ylim = c(0, 3)) +
   theme(
-    legend.position = "none",
-    panel.grid.major = element_line(colour = "grey90", size = 0.5),
-    panel.background = element_blank(),
-    axis.text = element_text(size = 9, color = "black"),
-    axis.title.y = element_text(size = 9),
-    axis.title.x = element_blank()
-  ) +
-  guides(color = guide_legend(override.aes = list(linetype = 0)))
-  # ggtitle("Observed data vs predictions increasing\nclimate change impacts")
-
-gg_dem_clim_all_pred_obs
-```
-
-![](02-modeling_files/figure-gfm/modelling-6.png)<!-- -->
-
-``` r
-dem_clim_c_pred_obs <- dem_clim_pred_obs_n |> 
-  filter(
-    df == "dem_clim_c2p_cc" |
-      df == "dem_clim_obs_p" |
-      df == "dem_clim_c2n_cc" |
-      df == "dem_clim_obs_n"
-    )
-
-table(dem_clim_c_pred_obs$k_type)
-```
-
-    ## 
-    ## 1_Natural 1_Planted 2_Natural 2_Planted 
-    ##      2401       772      4637      1812
-
-``` r
-table(dem_clim_c_pred_obs$df)
-```
-
-    ## 
-    ## dem_clim_c2n_cc dem_clim_c2p_cc  dem_clim_obs_n  dem_clim_obs_p 
-    ##            3519            1292            3519            1292
-
-``` r
-dem_clim_c_pred_obs <- dem_clim_c_pred_obs |> 
-  mutate(
-    mortality_pred_obs = if_else(
-      is.na(predFE), mort_real, predFE
-    )
-  )
-
-gg_dem_clim_c_pred_obs <- dem_clim_c_pred_obs |>
-  # when there is mortality (conditional part)
-  filter(mort_real > 0) |>
-  mutate(
-    k_type = recode_factor(
-      k_type, 
-      "1_Natural" = "C2 Natural",
-      "1_Planted" = "C2 Planted",
-      "2_Natural" = "C2 Natural",
-      "2_Planted" = "C2 Planted"
-    ),
-    df = recode_factor(
-      df, 
-      "dem_clim_obs_p" = "Observed",
-      "dem_clim_c2p_cc" = "Predicted",
-      "dem_clim_obs_n" = "Observed",
-      "dem_clim_c2n_cc" = "Predicted",
-    )
-  ) |>
-  ggplot(aes(x = k_type, y = mortality_pred_obs * 100,
-             fill = df, color = df)) +
-  stat_dots(
-    scale = 0.5,
-    quantiles = 50,
-    .width = 0,
-    alpha = .6,
-    color = NA,
-    size = .6
-    ) +
-    stat_halfeye(
-    .width = 0,
-    slab_fill = NA,
-  ) +
-  ylab(expression(paste("Mortality (%",~ha^-1~year^-1,")"))) +
-  scale_fill_manual(values = c("#E1BE6A", "#40B0A6"),
-                    guide = "none") +
-  scale_color_manual(values = c("#E1BE6A", "#40B0A6")) +
-  coord_cartesian(ylim = c(0, 3)) +
-  theme(
+    text = element_text(family = "sans"),
+    legend.text = element_text(size = 7),
     legend.key = element_blank(),
     legend.title = element_blank(),
     panel.grid.major = element_line(colour = "grey90", size = 0.5),
     panel.background = element_blank(),
-    axis.text = element_text(size = 9, color = "black"),
-    axis.title.y = element_text(size = 9),
+    axis.text = element_text(size = 7, color = "black"),
+    axis.title.y = element_text(size = 7),
     axis.title.x = element_blank()
   ) +
   guides(color = guide_legend(override.aes = list(linetype = 0)))
-  # ggtitle("Observed data in natural & planted stands vs predictions\nsetting all natural stands as C2 Natural & setting all planted\nstands as C2 Planted & increasing climate change impacts")
 
-gg_dem_clim_c_pred_obs
+gg_dem_clim_pred
 ```
 
-![](02-modeling_files/figure-gfm/modelling-7.png)<!-- -->
+![](02-modeling_files/figure-gfm/modelling-4.png)<!-- -->
 
 ``` r
 # save plots --------------------------------------------------------------
 ggsave(
-  plot = map_plot("WAIplot") + map_plot("speimin") +
+  plot = map_plot("WAIplot") / map_plot("speimin") +
     plot_annotation(tag_levels = "a"),
   here("03-results", "si_figures", "s3_wai_spei_distribution.png"),
-  width = 12, height = 6
+  width = 5, height = 8
 )
 
 ggsave(
-  plot = gg_dem_clim_all_pred_obs + 
-    theme(legend.position = "none") +
-    gg_dem_clim_c_pred_obs +
-    plot_annotation(tag_levels = "a"),
+  plot = gg_dem_clim_pred + 
+    theme(
+      legend.position = "bottom",
+      plot.tag = element_text(face = "bold",
+                              size = 9)
+      ),
   here("03-results", "main_figure", "main_plot.png"),
-  width = 9, height = 4,
+  width = 9, height = 9,
+  unit = "cm",
+  dpi = 600
+)
+
+library(svglite)
+ggsave(
+  plot = gg_dem_clim_pred + 
+    theme(
+      legend.position = "bottom",
+      plot.tag = element_text(face = "bold",
+                              size = 9)
+      ),
+  here("03-results", "main_figure", "main_plot.svg"),
+  width = 9, height = 9,
+  unit = "cm",
   dpi = 600
 )
 ```
@@ -1150,7 +819,7 @@ Session Info
 Sys.time()
 ```
 
-    ## [1] "2022-07-29 13:04:49 CEST"
+    ## [1] "2023-04-05 12:34:16 CEST"
 
 ``` r
 git2r::repository()
@@ -1158,13 +827,13 @@ git2r::repository()
 
     ## Local:    main C:/Users/julen/OneDrive/Escritorio/GitHub-col/legacies
     ## Remote:   main @ origin (https://github.com/Julenasti/legacies.git)
-    ## Head:     [eb2fa0c] 2022-07-29: update summary psy
+    ## Head:     [b96bdda] 2023-03-14: remove unnecesary models
 
 ``` r
 sessionInfo()
 ```
 
-    ## R version 4.2.1 (2022-06-23 ucrt)
+    ## R version 4.2.2 (2022-10-31 ucrt)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
     ## Running under: Windows 10 x64 (build 19044)
     ## 
@@ -1178,47 +847,50 @@ sessionInfo()
     ## [5] LC_TIME=English_United Kingdom.utf8    
     ## 
     ## attached base packages:
-    ## [1] stats4    stats     graphics  grDevices utils     datasets  methods  
-    ## [8] base     
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] testthat_3.1.4     RColorBrewer_1.1-3 ggdist_3.1.1       performance_0.9.1 
-    ##  [5] MASS_7.3-57        bbmle_1.0.25       corrr_0.4.3        DHARMa_0.4.5      
-    ##  [9] glmmTMB_1.1.3      viridis_0.6.2      viridisLite_0.4.0  sf_1.0-7          
-    ## [13] patchwork_1.1.1    here_1.0.1         forcats_0.5.1      stringr_1.4.0     
-    ## [17] dplyr_1.0.9        purrr_0.3.4        readr_2.1.2        tidyr_1.2.0       
-    ## [21] tibble_3.1.7       ggplot2_3.3.6      tidyverse_1.3.1   
+    ##  [1] svglite_2.1.0      testthat_3.1.4     RColorBrewer_1.1-3 ggdist_3.1.1      
+    ##  [5] MASS_7.3-58.1      DHARMa_0.4.5       glmmTMB_1.1.3      viridis_0.6.2     
+    ##  [9] viridisLite_0.4.1  sf_1.0-7           patchwork_1.1.1    here_1.0.1        
+    ## [13] forcats_0.5.1      stringr_1.4.1      dplyr_1.0.9        purrr_0.3.4       
+    ## [17] readr_2.1.2        tidyr_1.2.0        tibble_3.1.7       ggplot2_3.3.6     
+    ## [21] tidyverse_1.3.2   
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] minqa_1.2.4          colorspace_2.0-3     ellipsis_0.3.2      
-    ##  [4] class_7.3-20         rprojroot_2.0.3      fs_1.5.2            
-    ##  [7] rstudioapi_0.13      proxy_0.4-27         farver_2.1.1        
-    ## [10] hexbin_1.28.2        bit64_4.0.5          fansi_1.0.3         
-    ## [13] mvtnorm_1.1-3        lubridate_1.8.0      xml2_1.3.3          
-    ## [16] splines_4.2.1        knitr_1.39.3         jsonlite_1.8.0      
-    ## [19] nloptr_2.0.3         broom_1.0.0          dbplyr_2.2.1        
-    ## [22] compiler_4.2.1       httr_1.4.3           backports_1.4.1     
-    ## [25] assertthat_0.2.1     Matrix_1.4-1         fastmap_1.1.0       
-    ## [28] cli_3.3.0            htmltools_0.5.2      tools_4.2.1         
-    ## [31] gtable_0.3.0         glue_1.6.2           maps_3.4.0          
-    ## [34] Rcpp_1.0.9           cellranger_1.1.0     vctrs_0.4.1         
-    ## [37] nlme_3.1-157         insight_0.18.0       xfun_0.31           
-    ## [40] brio_1.1.3           lme4_1.1-30          rvest_1.0.2         
-    ## [43] lifecycle_1.0.1      gap.datasets_0.0.5   scales_1.2.0        
-    ## [46] vroom_1.5.7          hms_1.1.1            parallel_4.2.1      
-    ## [49] TMB_1.9.0            yaml_2.3.5           see_0.7.1           
-    ## [52] gridExtra_2.3        bdsmatrix_1.3-6      stringi_1.7.6       
-    ## [55] highr_0.9            gap_1.2.3-6          e1071_1.7-11        
-    ## [58] boot_1.3-28          rlang_1.0.3          pkgconfig_2.0.3     
-    ## [61] distributional_0.3.0 evaluate_0.15        lattice_0.20-45     
-    ## [64] labeling_0.4.2       bit_4.0.4            tidyselect_1.1.2    
-    ## [67] magrittr_2.0.3       R6_2.5.1             generics_0.1.3      
-    ## [70] DBI_1.1.3            pillar_1.7.0         haven_2.5.0         
-    ## [73] withr_2.5.0          units_0.8-0          modelr_0.1.8        
-    ## [76] crayon_1.5.1         KernSmooth_2.23-20   utf8_1.2.2          
-    ## [79] tzdb_0.3.0           rmarkdown_2.14       grid_4.2.1          
-    ## [82] readxl_1.4.0         git2r_0.30.1         reprex_2.0.1        
-    ## [85] digest_0.6.29        classInt_0.4-7       numDeriv_2016.8-1.1 
-    ## [88] munsell_0.5.0
+    ##   [1] TH.data_1.1-1        googledrive_2.0.0    minqa_1.2.4         
+    ##   [4] colorspace_2.0-3     ellipsis_0.3.2       class_7.3-20        
+    ##   [7] rprojroot_2.0.3      estimability_1.4.1   fs_1.5.2            
+    ##  [10] rstudioapi_0.13      proxy_0.4-27         hexbin_1.28.2       
+    ##  [13] farver_2.1.1         bit64_4.0.5          fansi_1.0.3         
+    ##  [16] mvtnorm_1.1-3        lubridate_1.8.0      xml2_1.3.3          
+    ##  [19] codetools_0.2-18     splines_4.2.2        knitr_1.40.1        
+    ##  [22] jsonlite_1.8.0       nloptr_2.0.3         broom_1.0.0         
+    ##  [25] dbplyr_2.2.1         compiler_4.2.2       httr_1.4.3          
+    ##  [28] emmeans_1.8.1-1      backports_1.4.1      assertthat_0.2.1    
+    ##  [31] Matrix_1.5-1         fastmap_1.1.0        gargle_1.2.0        
+    ##  [34] cli_3.3.0            htmltools_0.5.3      tools_4.2.2         
+    ##  [37] coda_0.19-4          gtable_0.3.0         glue_1.6.2          
+    ##  [40] corrr_0.4.3          maps_3.4.0           Rcpp_1.0.9          
+    ##  [43] cellranger_1.1.0     vctrs_0.5.0          nlme_3.1-160        
+    ##  [46] xfun_0.32            brio_1.1.3           lme4_1.1-30         
+    ##  [49] rvest_1.0.2          lifecycle_1.0.3      gap.datasets_0.0.5  
+    ##  [52] googlesheets4_1.0.0  zoo_1.8-10           scales_1.2.1        
+    ##  [55] vroom_1.5.7          ragg_1.2.5           hms_1.1.1           
+    ##  [58] parallel_4.2.2       sandwich_3.0-2       TMB_1.9.0           
+    ##  [61] yaml_2.3.5           gridExtra_2.3        stringi_1.7.8       
+    ##  [64] highr_0.9            gap_1.2.3-6          e1071_1.7-11        
+    ##  [67] boot_1.3-28          systemfonts_1.0.4    rlang_1.0.6         
+    ##  [70] pkgconfig_2.0.3      distributional_0.3.0 evaluate_0.18       
+    ##  [73] lattice_0.20-45      labeling_0.4.2       bit_4.0.4           
+    ##  [76] tidyselect_1.1.2     magrittr_2.0.3       R6_2.5.1            
+    ##  [79] generics_0.1.3       multcomp_1.4-23      DBI_1.1.3           
+    ##  [82] pillar_1.8.1         haven_2.5.0          withr_2.5.0         
+    ##  [85] units_0.8-0          survival_3.4-0       modelr_0.1.8        
+    ##  [88] crayon_1.5.2         KernSmooth_2.23-20   utf8_1.2.2          
+    ##  [91] tzdb_0.3.0           rmarkdown_2.16       grid_4.2.2          
+    ##  [94] readxl_1.4.0         git2r_0.30.1         reprex_2.0.1        
+    ##  [97] digest_0.6.29        classInt_0.4-7       xtable_1.8-4        
+    ## [100] numDeriv_2016.8-1.1  textshaping_0.3.6    munsell_0.5.0
 
 </details>
